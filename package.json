@@ -20,9 +20,10 @@
     "docgen": "npx solidoc",
     "copy-abis": "npm run clean; npx truffle compile; node copyAbis.js",
     "calc-size": "npm run clean; npx truffle compile; node calcSize.js",
-    "prepare": "npm run copy-abis; npm run docgen"
+    "prepare-prod": "npm run copy-abis; npm run docgen"
   },
   "dependencies": {
+    "@openzeppelin/test-helpers": "^0.5.10",
     "@truffle/hdwallet-provider": "^1.2.6",
     "eth-gas-reporter": "^0.2.22",
     "ganache-cli": "^6.12.2",
