@@ -2,7 +2,7 @@ const { BN, expectRevert } = require('@openzeppelin/test-helpers');
 
 const { expect } = require('chai');
 
-const ERC20PausableMock = artifacts.require('ERC20PausableMock');
+const ERC20PausableMock = artifacts.require('ERC20PausableMockUpgradeable');
 
 contract('ERC20Pausable', function (accounts) {
   const [ holder, recipient, anotherAccount ] = accounts;
