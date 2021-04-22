@@ -10,11 +10,11 @@ import "../proxy/Initializable.sol";
 contract ERC20ReturnFalseMockUpgradeable is Initializable, ContextUpgradeable {
     function __ERC20ReturnFalseMock_init() internal initializer {
         __Context_init_unchained();
-        __ERC20ReturnFalseMock_init_unchained();
+        // __ERC20ReturnFalseMock_init_unchained();
     }
 
-    function __ERC20ReturnFalseMock_init_unchained() internal initializer {
-    }
+    // function __ERC20ReturnFalseMock_init_unchained() internal initializer {
+    // }
     uint256 private _allowance;
 
     // IERC20's functions are not pure, but these mock implementations are: to prevent Solidity from issuing warnings,
@@ -44,13 +44,13 @@ contract ERC20ReturnFalseMockUpgradeable is Initializable, ContextUpgradeable {
 }
 
 contract ERC20ReturnTrueMockUpgradeable is Initializable, ContextUpgradeable {
-    function __ERC20ReturnTrueMock_init() internal initializer {
+    function __ERC20ReturnTrueMock_init() public initializer {
         __Context_init_unchained();
-        __ERC20ReturnTrueMock_init_unchained();
+        // __ERC20ReturnTrueMock_init_unchained();
     }
 
-    function __ERC20ReturnTrueMock_init_unchained() internal initializer {
-    }
+    // function __ERC20ReturnTrueMock_init_unchained() internal initializer {
+    // }
     mapping (address => uint256) private _allowances;
 
     // IERC20's functions are not pure, but these mock implementations are: to prevent Solidity from issuing warnings,
@@ -83,13 +83,13 @@ contract ERC20ReturnTrueMockUpgradeable is Initializable, ContextUpgradeable {
 }
 
 contract ERC20NoReturnMockUpgradeable is Initializable, ContextUpgradeable {
-    function __ERC20NoReturnMock_init() internal initializer {
+    function __ERC20NoReturnMock_init() public initializer {
         __Context_init_unchained();
-        __ERC20NoReturnMock_init_unchained();
+        // __ERC20NoReturnMock_init_unchained();
     }
 
-    function __ERC20NoReturnMock_init_unchained() internal initializer {
-    }
+    // function __ERC20NoReturnMock_init_unchained() internal initializer {
+    // }
     mapping (address => uint256) private _allowances;
 
     // IERC20's functions are not pure, but these mock implementations are: to prevent Solidity from issuing warnings,
@@ -123,14 +123,15 @@ contract SafeERC20WrapperUpgradeable is Initializable, ContextUpgradeable {
 
     IERC20Upgradeable private _token;
 
-    function __SafeERC20Wrapper_init(IERC20Upgradeable token) internal initializer {
+    function __SafeERC20Wrapper_init(IERC20Upgradeable token) public initializer {
         __Context_init_unchained();
-        __SafeERC20Wrapper_init_unchained(token);
+        _token = token;
+        // __SafeERC20Wrapper_init_unchained(token);
     }
 
-    function __SafeERC20Wrapper_init_unchained(IERC20Upgradeable token) internal initializer {
-        _token = token;
-    }
+    // function __SafeERC20Wrapper_init_unchained(IERC20Upgradeable token) internal initializer {
+    //     _token = token;
+    // }
 
     function transfer() public {
         _token.safeTransfer(address(0), 0);

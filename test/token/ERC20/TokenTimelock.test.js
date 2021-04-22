@@ -6,7 +6,7 @@ const ERC20Mock = artifacts.require('ERC20MockUpgradeable');
 const TokenTimelock = artifacts.require('TokenTimelockUpgradeable');
 
 contract('TokenTimelock', function (accounts) {
-  const [ beneficiary ] = accounts;
+  const [beneficiary] = accounts;
 
   const name = 'My Token';
   const symbol = 'MTKN';
@@ -15,21 +15,24 @@ contract('TokenTimelock', function (accounts) {
 
   context('with token', function () {
     beforeEach(async function () {
-      this.token = await ERC20Mock.new(name, symbol, beneficiary, 0); // We're not using the preminted tokens
+      this.token = await ERC20Mock.new(); // We're not using the preminted tokens
+      await this.token.__ERC20Mock_init(name, symbol, beneficiary, 0); // We're not using the preminted tokens
     });
 
     it('rejects a release time in the past', async function () {
       const pastReleaseTime = (await time.latest()).sub(time.duration.years(1));
-      await expectRevert(
-        TokenTimelock.new(this.token.address, beneficiary, pastReleaseTime),
-        'TokenTimelock: release time is before current time',
-      );
+      this.timelock = await TokenTimelock.new();
+        await expectRevert(
+          this.timelock.__TokenTimelock_init(this.token.address, beneficiary, pastReleaseTime),
+          'TokenTimelock: release time is before current time',
+        );
     });
 
     context('once deployed', function () {
       beforeEach(async function () {
         this.releaseTime = (await time.latest()).add(time.duration.years(1));
-        this.timelock = await TokenTimelock.new(this.token.address, beneficiary, this.releaseTime);
+        this.timelock = await TokenTimelock.new();
+        await  this.timelock.__TokenTimelock_init(this.token.address, beneficiary, this.releaseTime);
         await this.token.mint(this.timelock.address, amount);
       });
 

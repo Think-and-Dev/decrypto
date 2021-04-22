@@ -12,7 +12,8 @@ contract('ERC20Burnable', function (accounts) {
   const symbol = 'MTKN';
 
   beforeEach(async function () {
-    this.token = await ERC20BurnableMock.new(name, symbol, owner, initialBalance, { from: owner });
+    this.token = await ERC20BurnableMock.new();
+    await  this.token.__ERC20BurnableMock_init(name, symbol, owner, initialBalance, { from: owner });
   });
 
   shouldBehaveLikeERC20Burnable(owner, initialBalance, otherAccounts);

@@ -24,7 +24,7 @@ contract TokenTimelockUpgradeable is Initializable {
     // timestamp when token release is enabled
     uint256 private _releaseTime;
 
-    function __TokenTimelock_init(IERC20Upgradeable token_, address beneficiary_, uint256 releaseTime_) internal initializer {
+    function __TokenTimelock_init(IERC20Upgradeable token_, address beneficiary_, uint256 releaseTime_) public initializer {
         __TokenTimelock_init_unchained(token_, beneficiary_, releaseTime_);
     }
 

@@ -12,7 +12,8 @@ contract('ERC20Snapshot', function (accounts) {
   const symbol = 'MTKN';
 
   beforeEach(async function () {
-    this.token = await ERC20SnapshotMock.new(name, symbol, initialHolder, initialSupply);
+    this.token = await ERC20SnapshotMock.new();
+    await this.token.__ERC20SnapshotMock_init(name, symbol, initialHolder, initialSupply);
   });
 
   describe('snapshot', function () {
