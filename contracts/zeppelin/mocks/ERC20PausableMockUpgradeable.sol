@@ -12,7 +12,7 @@ contract ERC20PausableMockUpgradeable is Initializable, ERC20PausableUpgradeable
         string memory symbol,
         address initialAccount,
         uint256 initialBalance
-    ) public {
+    ) public initializer {
         __Context_init_unchained();
         __ERC20_init_unchained(name, symbol);
         __Pausable_init_unchained();
