@@ -1,5 +1,5 @@
 const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
-const ERC20SnapshotMock = artifacts.require('ERC20SnapshotMock');
+const ERC20SnapshotMock = artifacts.require('ERC20SnapshotMockUpgradeable');
 
 const { expect } = require('chai');
 
