@@ -13,7 +13,8 @@ contract('ERC20Pausable', function (accounts) {
   const symbol = 'MTKN';
 
   beforeEach(async function () {
-    this.token = await ERC20PausableMock.new(name, symbol, holder, initialSupply);
+    this.token = await ERC20PausableMock.new();
+    await this.token.__ERC20PausableMock_init(name, symbol, holder, initialSupply);
   });
 
   describe('pausable token', function () {

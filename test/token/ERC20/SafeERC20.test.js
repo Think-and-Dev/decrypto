@@ -10,7 +10,8 @@ contract('SafeERC20', function (accounts) {
 
   describe('with address that has no contract code', function () {
     beforeEach(async function () {
-      this.wrapper = await SafeERC20Wrapper.new(hasNoCode);
+      this.wrapper = await SafeERC20Wrapper.new();
+      await  this.wrapper.__SafeERC20Wrapper_init(hasNoCode);
     });
 
     shouldRevertOnAllCalls('Address: call to non-contract');
@@ -18,7 +19,8 @@ contract('SafeERC20', function (accounts) {
 
   describe('with token that returns false on all calls', function () {
     beforeEach(async function () {
-      this.wrapper = await SafeERC20Wrapper.new((await ERC20ReturnFalseMock.new()).address);
+      this.wrapper = await SafeERC20Wrapper.new();
+      await  this.wrapper.__SafeERC20Wrapper_init((await ERC20ReturnFalseMock.new()).address);
     });
 
     shouldRevertOnAllCalls('SafeERC20: ERC20 operation did not succeed');
@@ -26,7 +28,8 @@ contract('SafeERC20', function (accounts) {
 
   describe('with token that returns true on all calls', function () {
     beforeEach(async function () {
-      this.wrapper = await SafeERC20Wrapper.new((await ERC20ReturnTrueMock.new()).address);
+      this.wrapper = await SafeERC20Wrapper.new();
+      await this.wrapper.__SafeERC20Wrapper_init((await ERC20ReturnTrueMock.new()).address);
     });
 
     shouldOnlyRevertOnErrors();
@@ -34,7 +37,8 @@ contract('SafeERC20', function (accounts) {
 
   describe('with token that returns no boolean values', function () {
     beforeEach(async function () {
-      this.wrapper = await SafeERC20Wrapper.new((await ERC20NoReturnMock.new()).address);
+      this.wrapper = await SafeERC20Wrapper.new();
+      await this.wrapper.__SafeERC20Wrapper_init((await ERC20NoReturnMock.new()).address);
     });
 
     shouldOnlyRevertOnErrors();

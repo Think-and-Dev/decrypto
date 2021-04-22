@@ -22,7 +22,8 @@ contract('ERC20', function (accounts) {
   const initialSupply = new BN(100);
 
   beforeEach(async function () {
-    this.token = await ERC20Mock.new(name, symbol, initialHolder, initialSupply);
+    this.token = await ERC20Mock.new();
+    await this.token.__ERC20Mock_init(name, symbol, initialHolder, initialSupply);
   });
 
   it('has a name', async function () {
@@ -41,7 +42,8 @@ contract('ERC20', function (accounts) {
     const decimals = new BN(6);
 
     it('can set decimals during construction', async function () {
-      const token = await ERC20DecimalsMock.new(name, symbol, decimals);
+      const token = await ERC20DecimalsMock.new();
+      await token.__ERC20DecimalsMock_init(name, symbol, decimals);
       expect(await token.decimals()).to.be.bignumber.equal(decimals);
     });
   });
