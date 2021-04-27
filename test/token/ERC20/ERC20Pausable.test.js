@@ -2,7 +2,7 @@ const { BN, expectRevert } = require('@openzeppelin/test-helpers');
 
 const { expect } = require('chai');
 
-const ERC20PausableMock = artifacts.require('ERC20PausableMockUpgradeable');
+const ERC20PausableMock = artifacts.require('ERC20Decrypto');
 
 contract('ERC20Pausable', function (accounts) {
   const [ holder, recipient, anotherAccount ] = accounts;
@@ -14,7 +14,10 @@ contract('ERC20Pausable', function (accounts) {
 
   beforeEach(async function () {
     this.token = await ERC20PausableMock.new();
-    await this.token.__ERC20PausableMock_init(name, symbol, holder, initialSupply);
+    // await this.token.__ERC20PausableMock_init(name, symbol, holder, initialSupply);
+
+    await this.token.initialize(name, symbol, holder);
+    await this.token.mint(holder,initialSupply)
   });
 
   describe('pausable token', function () {

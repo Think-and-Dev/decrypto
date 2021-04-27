@@ -10,20 +10,24 @@ const {
   shouldBehaveLikeERC20Approve,
 } = require('./ERC20.behavior');
 
-const ERC20Mock = artifacts.require('ERC20MockUpgradeable');
-const ERC20DecimalsMock = artifacts.require('ERC20DecimalsMockUpgradeable');
+// const ERC20Mock = artifacts.require('ERC20MockUpgradeable');
+// const ERC20DecimalsMock = artifacts.require('ERC20DecimalsMockUpgradeable');
+const ERC20Mock = artifacts.require('ERC20Decrypto');
+const ERC20DecimalsMock = artifacts.require('ERC20Decrypto');
 
-contract('ERC20', function (accounts) {
+contract('ERC20Decrypto', function (accounts) {
   const [ initialHolder, recipient, anotherAccount ] = accounts;
 
-  const name = 'My Token';
-  const symbol = 'MTKN';
+  const name = 'DecryptoToken';
+  const symbol = 'DTKN';
 
   const initialSupply = new BN(100);
 
   beforeEach(async function () {
     this.token = await ERC20Mock.new();
-    await this.token.__ERC20Mock_init(name, symbol, initialHolder, initialSupply);
+    // await this.token.__ERC20Mock_init(name, symbol, initialHolder, initialSupply);
+    await this.token.initialize(name, symbol, initialHolder);
+    await this.token.mint(initialHolder,initialSupply)
   });
 
   it('has a name', async function () {
@@ -38,15 +42,15 @@ contract('ERC20', function (accounts) {
     expect(await this.token.decimals()).to.be.bignumber.equal('18');
   });
 
-  describe('_setupDecimals', function () {
-    const decimals = new BN(6);
+  // describe('_setupDecimals', function () {
+  //   const decimals = new BN(6);
 
-    it('can set decimals during construction', async function () {
-      const token = await ERC20DecimalsMock.new();
-      await token.__ERC20DecimalsMock_init(name, symbol, decimals);
-      expect(await token.decimals()).to.be.bignumber.equal(decimals);
-    });
-  });
+  //   it('can set decimals during construction', async function () {
+  //     const token = await ERC20DecimalsMock.new();
+  //     await token.__ERC20DecimalsMock_init(name, symbol, decimals);
+  //     expect(await token.decimals()).to.be.bignumber.equal(decimals);
+  //   });
+  // });
 
   shouldBehaveLikeERC20('ERC20', initialSupply, initialHolder, recipient, anotherAccount);
 
@@ -243,77 +247,77 @@ contract('ERC20', function (accounts) {
     });
   });
 
-  describe('_burn', function () {
-    it('rejects a null account', async function () {
-      await expectRevert(this.token.burn(ZERO_ADDRESS, new BN(1)),
-        'ERC20: burn from the zero address');
-    });
+  // describe('_burn', function () {
+  //   it('rejects a null account', async function () {
+  //     await expectRevert(this.token.burn(ZERO_ADDRESS, new BN(1)),
+  //       'ERC20: burn from the zero address');
+  //   });
 
-    describe('for a non zero account', function () {
-      it('rejects burning more than balance', async function () {
-        await expectRevert(this.token.burn(
-          initialHolder, initialSupply.addn(1)), 'ERC20: burn amount exceeds balance',
-        );
-      });
+  //   describe('for a non zero account', function () {
+  //     it('rejects burning more than balance', async function () {
+  //       await expectRevert(this.token.burn(
+  //         initialHolder, initialSupply.addn(1)), 'ERC20: burn amount exceeds balance',
+  //       );
+  //     });
 
-      const describeBurn = function (description, amount) {
-        describe(description, function () {
-          beforeEach('burning', async function () {
-            const { logs } = await this.token.burn(initialHolder, amount);
-            this.logs = logs;
-          });
+  //     const describeBurn = function (description, amount) {
+  //       describe(description, function () {
+  //         beforeEach('burning', async function () {
+  //           const { logs } = await this.token.burn(initialHolder, amount);
+  //           this.logs = logs;
+  //         });
 
-          it('decrements totalSupply', async function () {
-            const expectedSupply = initialSupply.sub(amount);
-            expect(await this.token.totalSupply()).to.be.bignumber.equal(expectedSupply);
-          });
+  //         it('decrements totalSupply', async function () {
+  //           const expectedSupply = initialSupply.sub(amount);
+  //           expect(await this.token.totalSupply()).to.be.bignumber.equal(expectedSupply);
+  //         });
 
-          it('decrements initialHolder balance', async function () {
-            const expectedBalance = initialSupply.sub(amount);
-            expect(await this.token.balanceOf(initialHolder)).to.be.bignumber.equal(expectedBalance);
-          });
+  //         it('decrements initialHolder balance', async function () {
+  //           const expectedBalance = initialSupply.sub(amount);
+  //           expect(await this.token.balanceOf(initialHolder)).to.be.bignumber.equal(expectedBalance);
+  //         });
 
-          it('emits Transfer event', async function () {
-            const event = expectEvent.inLogs(this.logs, 'Transfer', {
-              from: initialHolder,
-              to: ZERO_ADDRESS,
-            });
+  //         it('emits Transfer event', async function () {
+  //           const event = expectEvent.inLogs(this.logs, 'Transfer', {
+  //             from: initialHolder,
+  //             to: ZERO_ADDRESS,
+  //           });
 
-            expect(event.args.value).to.be.bignumber.equal(amount);
-          });
-        });
-      };
+  //           expect(event.args.value).to.be.bignumber.equal(amount);
+  //         });
+  //       });
+  //     };
 
-      describeBurn('for entire balance', initialSupply);
-      describeBurn('for less amount than balance', initialSupply.subn(1));
-    });
-  });
+  //     describeBurn('for entire balance', initialSupply);
+  //     describeBurn('for less amount than balance', initialSupply.subn(1));
+  //   });
+  // });
 
-  describe('_transfer', function () {
-    shouldBehaveLikeERC20Transfer('ERC20', initialHolder, recipient, initialSupply, function (from, to, amount) {
-      return this.token.transferInternal(from, to, amount);
-    });
+  // describe('_transfer', function () {
+  //   shouldBehaveLikeERC20Transfer('ERC20Decrypto', initialHolder, recipient, initialSupply, function (from, to, amount) {
+  //     return this.token.transferInternal(from, to, amount);
+  //   });
 
-    describe('when the sender is the zero address', function () {
-      it('reverts', async function () {
-        await expectRevert(this.token.transferInternal(ZERO_ADDRESS, recipient, initialSupply),
-          'ERC20: transfer from the zero address',
-        );
-      });
-    });
-  });
+  //   describe('when the sender is the zero address', function () {
+  //     it('reverts', async function () {
+  //       await expectRevert(this.token.transferInternal(ZERO_ADDRESS, recipient, initialSupply),
+  //         'ERC20: transfer from the zero address',
+  //       );
+  //     });
+  //   });
+  // });
 
-  describe('_approve', function () {
-    shouldBehaveLikeERC20Approve('ERC20', initialHolder, recipient, initialSupply, function (owner, spender, amount) {
-      return this.token.approveInternal(owner, spender, amount);
-    });
+  // describe('_approve', function () {
+  //   shouldBehaveLikeERC20Approve('ERC20Decrypto', initialHolder, recipient, initialSupply, function (owner, spender, amount) {
+  //     return this.token.approveInternal(owner, spender, amount);
+  //   });
 
-    describe('when the owner is the zero address', function () {
-      it('reverts', async function () {
-        await expectRevert(this.token.approveInternal(ZERO_ADDRESS, recipient, initialSupply),
-          'ERC20: approve from the zero address',
-        );
-      });
-    });
-  });
+  //   describe('when the owner is the zero address', function () {
+  //     it('reverts', async function () {
+  //       await expectRevert(this.token.approveInternal(ZERO_ADDRESS, recipient, initialSupply),
+  //         'ERC20: approve from the zero address',
+  //       );
+  //     });
+  //   });
+  // });
 });
