@@ -1,4 +1,5 @@
 const { BN, expectEvent, expectRevert, constants } = require('@openzeppelin/test-helpers');
+const { expect } = require('chai');
 const ERC20BurnableMock = artifacts.require('ERC20Decrypto');
 
 contract('ERC20Decrypto', function (accounts) {
@@ -6,8 +7,8 @@ contract('ERC20Decrypto', function (accounts) {
 
     const initialBalance = new BN(1000);
 
-    const name = 'My Token';
-    const symbol = 'MTKN';
+    const name = 'DecryptoToken';
+    const symbol = 'DTKN';
     const { ZERO_ADDRESS } = constants;
     const fee = new BN(200);//200 =>2%
     const zeroBN = new BN(0);
@@ -59,34 +60,88 @@ contract('ERC20Decrypto', function (accounts) {
                 );
             });
         });
-        describe('transfer with fee', function () {
+        describe('transfer with fee', async function () {
+            //set amount to transfer
+            const amountBN = new BN(100);
+            //set the transaction fee result
+            const transactionFee = amountBN.mul(fee).div(new BN('10000'));
 
-            it('transfer one account to other and the addressFee recive a fee', async function () {
+            beforeEach(async function () {
                 //set fee 2%
                 const { logs } = await this.token.setFee(fee, { from: owner });
                 expectEvent.inLogs(logs, 'FeesChange', {
                     oldFeeBasisPoints: zeroBN,
                     feeBasisPoints: fee
                 });
-                //set amount to transfer
-                const amountBN = new BN(100);
-                //set the transaction fee result
-                const transactionFee = amountBN.mul(fee).div(new BN('10000'));
                 //mint initial balance to account
-                await this.token.mint(anotherAccount, initialBalance)
-                //transfer 
-                const transfer = await (this.token.transfer(thirdAccount, amountBN, { from: anotherAccount }));
-                //evaluate events
-                expectEvent.inLogs(transfer.logs, 'Transfer', {
-                    from: anotherAccount,
-                    to: owner,
-                    value: transactionFee
+                await this.token.mint(anotherAccount, amountBN)
+            });
+
+            describe('transfer one account to other and the addressFee recive a fee', function () {
+                it('transfer', async function () {
+                    //transfer 
+                    await (this.token.transfer(thirdAccount, amountBN, { from: anotherAccount }));
+                    //set the amount - fee
+                    const balanceToReceive = amountBN.sub(transactionFee);
+
+                    expect(await this.token.balanceOf(anotherAccount)).to.be.bignumber.equal('0');
+                    expect(await this.token.balanceOf(thirdAccount)).to.be.bignumber.equal(balanceToReceive);
+                    expect(await this.token.balanceOf(owner)).to.be.bignumber.equal(initialBalance.add(transactionFee));
+
+                });
+                it('emit transfer events', async function () {
+                    //transfer 
+                    const { logs } = await (this.token.transfer(thirdAccount, amountBN, { from: anotherAccount }));
+                    //evaluate events
+                    expectEvent.inLogs(logs, 'Transfer', {
+                        from: anotherAccount,
+                        to: owner,
+                        value: transactionFee
+                    });
+
+                    expectEvent.inLogs(logs, 'Transfer', {
+                        from: anotherAccount,
+                        to: thirdAccount,
+                        value: amountBN
+                    });
+                });
+            });
+            describe('transfer one account to other and the addressFee recive a fee', function () {
+                beforeEach(async function () {
+                    //approve other account
+                    await this.token.approve(otherAccounts[0], amountBN, { from: anotherAccount });
+                });
+                //set spender account
+                const spender = otherAccounts[0];
+                //set token owner
+                const tokenOwner = anotherAccount;
+
+                it.only('transfer', async function () {
+                    //transfer 
+                    await (this.token.transferFrom(tokenOwner, thirdAccount, amountBN, { from: spender }));
+                    //set the amount - fee
+                    const balanceToReceive = amountBN.sub(transactionFee);
+
+                    expect(await this.token.balanceOf(tokenOwner)).to.be.bignumber.equal('0');
+                    expect(await this.token.balanceOf(thirdAccount)).to.be.bignumber.equal(balanceToReceive);
+                    expect(await this.token.balanceOf(owner)).to.be.bignumber.equal(initialBalance.add(transactionFee));
                 });
 
-                expectEvent.inLogs(transfer.logs, 'Transfer', {
-                    from: anotherAccount,
-                    to: thirdAccount,
-                    value: amountBN
+                it('emits events', async function () {
+                    //transfer 
+                    const { logs } = await (this.token.transferFrom(tokenOwner, thirdAccount, amountBN, { from: spender }));
+                    //evaluate events
+                    expectEvent.inLogs(logs, 'Transfer', {
+                        from: tokenOwner,
+                        to: owner,
+                        value: transactionFee
+                    });
+
+                    expectEvent.inLogs(logs, 'Transfer', {
+                        from: tokenOwner,
+                        to: thirdAccount,
+                        value: amountBN
+                    });
                 });
             });
         });
