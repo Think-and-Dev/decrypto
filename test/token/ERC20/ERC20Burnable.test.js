@@ -13,7 +13,6 @@ contract('ERC20Burnable', function (accounts) {
 
   beforeEach(async function () {
     this.token = await ERC20BurnableMock.new();
-    // await  this.token.__ERC20BurnableMock_init(name, symbol, owner, initialBalance, { from: owner });
     await this.token.initialize(name, symbol, owner);
     await this.token.mint(owner,initialBalance)
   });

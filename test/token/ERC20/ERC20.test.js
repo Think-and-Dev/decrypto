@@ -1,5 +1,3 @@
-// import "../contracts/zeppelin/mocks/ERC20MockUpgradeable.sol";
-
 const { BN, constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 const { ZERO_ADDRESS } = constants;
@@ -10,8 +8,6 @@ const {
   shouldBehaveLikeERC20Approve,
 } = require('./ERC20.behavior');
 
-// const ERC20Mock = artifacts.require('ERC20MockUpgradeable');
-// const ERC20DecimalsMock = artifacts.require('ERC20DecimalsMockUpgradeable');
 const ERC20Mock = artifacts.require('ERC20Decrypto');
 const ERC20DecimalsMock = artifacts.require('ERC20Decrypto');
 
@@ -25,7 +21,6 @@ contract('ERC20', function (accounts) {
 
   beforeEach(async function () {
     this.token = await ERC20Mock.new();
-    // await this.token.__ERC20Mock_init(name, symbol, initialHolder, initialSupply);
     await this.token.initialize(name, symbol, initialHolder);
     await this.token.mint(initialHolder, initialSupply)
   });
