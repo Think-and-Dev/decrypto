@@ -163,23 +163,6 @@ contract ERC20Decrypto is
     }
 
     /**
-     * @dev See {IERC20-transfer}.
-     *
-     * Requirements:
-     * - `recipient` cannot be the zero address.
-     * - the caller must have a balance of at least `amount`.
-     */
-    function transfer(address recipient, uint256 amount)
-        public
-        virtual
-        override
-        returns (bool)
-    {
-        _transfer(_msgSender(), recipient, amount);
-        return true;
-    }
-
-    /**
      * @dev Set basic and max fee
      *
      * Emits a {FeesChange} event.
