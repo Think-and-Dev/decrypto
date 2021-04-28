@@ -116,7 +116,7 @@ contract('ERC20Decrypto', function (accounts) {
                 //set token owner
                 const tokenOwner = anotherAccount;
 
-                it.only('transfer', async function () {
+                it('transfer', async function () {
                     //transfer 
                     await (this.token.transferFrom(tokenOwner, thirdAccount, amountBN, { from: spender }));
                     //set the amount - fee
