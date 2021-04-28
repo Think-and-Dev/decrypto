@@ -1,7 +1,7 @@
 const { BN, expectEvent, expectRevert, constants } = require('@openzeppelin/test-helpers');
 const ERC20BurnableMock = artifacts.require('ERC20Decrypto');
 
-contract.only('ERC20Decrypto', function (accounts) {
+contract('ERC20Decrypto', function (accounts) {
     const [owner, anotherAccount, thirdAccount, ...otherAccounts] = accounts;
 
     const initialBalance = new BN(1000);
