@@ -45,19 +45,19 @@ contract ERC20Decrypto is
     /**
      * @dev Account owner of feed
      */
-    address private _ownerFee;
+    address private _addressFee;
 
     /**
      * @dev Emitted when `newFeeds` are sets
      *
      */
-    event FeesChange(uint256 feeBasisPoints);
+    event FeesChange(uint256 oldFeeBasisPoints, uint256 feeBasisPoints);
 
     /**
      * @dev Emitted when owner fee set
      *
      */
-    event OwnerFeeChange(address oldOwnerFee, address newOwnerFee);
+    event AddressFeeChange(address oldOwnerFee, address newOwnerFee);
 
     // /**
     //  * @dev initialize contract -- proxy
@@ -82,6 +82,7 @@ contract ERC20Decrypto is
         address owner
     ) internal initializer {
         require(owner != address(0), "ERC20: owner coudl not be 0");
+        _addressFee = owner;
         //ini context
         __Context_init_unchained();
         //ini access control
@@ -184,7 +185,7 @@ contract ERC20Decrypto is
      * Emits a {FeesChange} event.
      * Requirements:
      * - `recipient` cannot be the zero address.
-     * - the caller newBasisPoints not been mayor than 20.
+     * - the caller newBasisPoints not been mayor than 1000 (10%).
      * - the caller must have the `FEE_ROLE`.
      */
 
@@ -195,40 +196,42 @@ contract ERC20Decrypto is
         );
         // Ensure transparency by hardcoding limit beyond which fees can never be added
         require(
-            newBasisPoints < 20,
-            "ERC20: newBasisPoints must not been mayor than 20"
+            newBasisPoints < 1000,
+            "ERC20: newBasisPoints must not been mayor than 1000"
         );
+        //set old basisPointRate
+        uint256 oldBasisPointRate = basisPointsRate;
         //set new values
         basisPointsRate = newBasisPoints;
         //emit event
-        FeesChange(basisPointsRate);
+        FeesChange(oldBasisPointRate, basisPointsRate);
     }
 
     /**
      * @dev Set owner fee
      *
-     * Emits a {OwnerFeeChange} event.
+     * Emits a {AddressFeeChange} event.
      * Requirements:
-     * - `newAddressOwnerFee` cannot be the zero address.
+     * - `newAddressFee` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      * - the caller must have the `ADMIN_ROLE`.
      */
-    function setOwnerFee(address newAddressOwnerFee) public virtual {
+    function setAddressFee(address newAddressFee) public virtual {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
             "ERC20: must have admin role to setOwnerFee"
         );
         // Ensure transparency by hardcoding limit beyond which fees can never be added
         require(
-            newAddressOwnerFee != address(0),
-            "ERC20: newAddressOwnerFee could not be 0"
+            newAddressFee != address(0),
+            "ERC20: newAddressFee could not be 0"
         );
         //set old owner
-        address oldOwner = _ownerFee;
+        address oldOwner = _addressFee;
         //set new owner
-        _ownerFee = newAddressOwnerFee;
+        _addressFee = newAddressFee;
         //emit event
-        OwnerFeeChange(oldOwner, _ownerFee);
+        AddressFeeChange(oldOwner, _addressFee);
     }
 
     /**
@@ -268,8 +271,8 @@ contract ERC20Decrypto is
         _balances[recipient] = _balances[recipient].add(sendAmount);
         //validate fee
         if (fee > 0) {
-            _balances[_ownerFee] = _balances[_ownerFee].add(fee);
-            Transfer(sender, _ownerFee, fee);
+            _balances[_addressFee] = _balances[_addressFee].add(fee);
+            emit Transfer(sender, _addressFee, fee);
         }
         emit Transfer(sender, recipient, amount);
     }
