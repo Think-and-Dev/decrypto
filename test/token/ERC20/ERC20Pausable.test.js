@@ -9,8 +9,8 @@ contract('ERC20Pausable', function (accounts) {
 
   const initialSupply = new BN(100);
 
-  const name = 'My Token';
-  const symbol = 'MTKN';
+  const name = 'DecryptoToken';
+  const symbol = 'DTKN';
 
   beforeEach(async function () {
     this.token = await ERC20PausableMock.new();
@@ -112,7 +112,7 @@ contract('ERC20Pausable', function (accounts) {
       const amount = new BN('42');
 
       it('allows to burn when unpaused', async function () {
-        await this.token.burn(holder, amount);
+        await this.token.burn(amount, {from: holder});
 
         expect(await this.token.balanceOf(holder)).to.be.bignumber.equal(initialSupply.sub(amount));
       });
@@ -121,7 +121,7 @@ contract('ERC20Pausable', function (accounts) {
         await this.token.pause();
         await this.token.unpause();
 
-        await this.token.burn(holder, amount);
+        await this.token.burn(amount, {from:holder});
 
         expect(await this.token.balanceOf(holder)).to.be.bignumber.equal(initialSupply.sub(amount));
       });
@@ -129,7 +129,7 @@ contract('ERC20Pausable', function (accounts) {
       it('reverts when trying to burn when paused', async function () {
         await this.token.pause();
 
-        await expectRevert(this.token.burn(holder, amount),
+        await expectRevert(this.token.burn(amount, {from: holder}),
           'ERC20Pausable: token transfer while paused',
         );
       });
