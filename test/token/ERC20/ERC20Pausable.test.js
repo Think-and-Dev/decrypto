@@ -2,19 +2,21 @@ const { BN, expectRevert } = require('@openzeppelin/test-helpers');
 
 const { expect } = require('chai');
 
-const ERC20PausableMock = artifacts.require('ERC20PausableMockUpgradeable');
+const ERC20PausableMock = artifacts.require('ERC20Decrypto');
 
 contract('ERC20Pausable', function (accounts) {
   const [ holder, recipient, anotherAccount ] = accounts;
 
   const initialSupply = new BN(100);
 
-  const name = 'My Token';
-  const symbol = 'MTKN';
+  const name = 'DecryptoToken';
+  const symbol = 'DTKN';
 
   beforeEach(async function () {
     this.token = await ERC20PausableMock.new();
-    await this.token.__ERC20PausableMock_init(name, symbol, holder, initialSupply);
+
+    await this.token.initialize(name, symbol, holder);
+    await this.token.mint(holder,initialSupply)
   });
 
   describe('pausable token', function () {
@@ -109,7 +111,7 @@ contract('ERC20Pausable', function (accounts) {
       const amount = new BN('42');
 
       it('allows to burn when unpaused', async function () {
-        await this.token.burn(holder, amount);
+        await this.token.burn(amount, {from: holder});
 
         expect(await this.token.balanceOf(holder)).to.be.bignumber.equal(initialSupply.sub(amount));
       });
@@ -118,7 +120,7 @@ contract('ERC20Pausable', function (accounts) {
         await this.token.pause();
         await this.token.unpause();
 
-        await this.token.burn(holder, amount);
+        await this.token.burn(amount, {from:holder});
 
         expect(await this.token.balanceOf(holder)).to.be.bignumber.equal(initialSupply.sub(amount));
       });
@@ -126,7 +128,7 @@ contract('ERC20Pausable', function (accounts) {
       it('reverts when trying to burn when paused', async function () {
         await this.token.pause();
 
-        await expectRevert(this.token.burn(holder, amount),
+        await expectRevert(this.token.burn(amount, {from: holder}),
           'ERC20Pausable: token transfer while paused',
         );
       });
