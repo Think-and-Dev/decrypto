@@ -2,25 +2,7 @@
 const fs = require('fs');
 
 const contractNames = [
-  'BProToken',
-  'CommissionSplitter',
-  'DocToken',
-  'MoC',
-  'MoCBProxManager',
-  'MoCConnector',
-  'MoCConverter',
-  'MoCExchange',
-  'MoCHelperLib',
-  'MoCInrate',
-  'MoCSettlement',
-  'MoCState',
-  'MoCToken',
-  'MoCVendors',
-  'MoCVendorsEvents',
-  'PriceFeed',
-  'PriceFeederAdder',
-  'PriceFeederRemover',
-  'PriceFeederWhitelist',
+  'ERC20Decrypto',
   'ProxyAdmin'
 ];
 

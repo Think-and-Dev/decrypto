@@ -9,7 +9,6 @@ const {
 } = require('./ERC20.behavior');
 
 const ERC20Mock = artifacts.require('ERC20Decrypto');
-const ERC20DecimalsMock = artifacts.require('ERC20Decrypto');
 
 contract('ERC20', function (accounts) {
   const [initialHolder, recipient, anotherAccount] = accounts;

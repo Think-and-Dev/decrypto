@@ -66,7 +66,7 @@ contract ERC20Decrypto is
         string memory name,
         string memory symbol,
         address owner
-    ) public virtual initializer {
+    ) public initializer {
         __ERC20Decrypto_init(name, symbol, owner);
     }
 
