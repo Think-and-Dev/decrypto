@@ -2,7 +2,7 @@ const { BN, constants, expectEvent, expectRevert } = require('@openzeppelin/test
 const { expect } = require('chai');
 const { ZERO_ADDRESS } = constants;
 
-function shouldBehaveLikeERC20 (errorPrefix, initialSupply, initialHolder, recipient, anotherAccount) {
+function shouldBehaveLikeERC20(errorPrefix, initialSupply, initialHolder, recipient, anotherAccount) {
   describe('total supply', function () {
     it('returns the total amount of tokens', async function () {
       expect(await this.token.totalSupply()).to.be.bignumber.equal(initialSupply);
@@ -49,6 +49,8 @@ function shouldBehaveLikeERC20 (errorPrefix, initialSupply, initialHolder, recip
             const amount = initialSupply;
 
             it('transfers the requested amount', async function () {
+              // console.log("initialSupply", initialSupply.toString())
+              // console.log("amount", amount.toString())
               await this.token.transferFrom(tokenOwner, to, amount, { from: spender });
 
               expect(await this.token.balanceOf(tokenOwner)).to.be.bignumber.equal('0');
@@ -159,12 +161,14 @@ function shouldBehaveLikeERC20 (errorPrefix, initialSupply, initialHolder, recip
   });
 }
 
-function shouldBehaveLikeERC20Transfer (errorPrefix, from, to, balance, transfer) {
+function shouldBehaveLikeERC20Transfer(errorPrefix, from, to, balance, transfer) {
   describe('when the recipient is not the zero address', function () {
     describe('when the sender does not have enough balance', function () {
       const amount = balance.addn(1);
 
-      it('reverts', async function () {
+      it.only('reverts', async function () {
+        console.log("===>balance", (await this.token.balanceOf(from)).toString());
+        console.log("amount===>",amount);
         await expectRevert(transfer.call(this, from, to, amount),
           `${errorPrefix}: transfer amount exceeds balance`,
         );
@@ -225,7 +229,7 @@ function shouldBehaveLikeERC20Transfer (errorPrefix, from, to, balance, transfer
   });
 }
 
-function shouldBehaveLikeERC20Approve (errorPrefix, owner, spender, supply, approve) {
+function shouldBehaveLikeERC20Approve(errorPrefix, owner, spender, supply, approve) {
   describe('when the spender is not the zero address', function () {
     describe('when the sender has enough balance', function () {
       const amount = supply;
@@ -277,6 +281,7 @@ function shouldBehaveLikeERC20Approve (errorPrefix, owner, spender, supply, appr
       describe('when there was no approved amount before', function () {
         it('approves the requested amount', async function () {
           await approve.call(this, owner, spender, amount);
+          console.log("approve=====>", amount.toString())
 
           expect(await this.token.allowance(owner, spender)).to.be.bignumber.equal(amount);
         });

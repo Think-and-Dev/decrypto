@@ -1,6 +1,11 @@
 const { BN, expectEvent, expectRevert, constants } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 const ERC20BurnableMock = artifacts.require('ERC20Decrypto');
+const {
+    shouldBehaveLikeERC20,
+    shouldBehaveLikeERC20Transfer,
+    shouldBehaveLikeERC20Approve,
+} = require('./ERC20.behavior');
 
 contract('ERC20Decrypto', function (accounts) {
     const [owner, anotherAccount, thirdAccount, ...otherAccounts] = accounts;
@@ -29,6 +34,10 @@ contract('ERC20Decrypto', function (accounts) {
                     newOwnerFee: anotherAccount
                 });
             });
+            it('change addressFee', async function () {
+                await this.token.setAddressFee(anotherAccount, { from: owner });
+                expect(await this.token.addressFee.call()).to.be.equal(anotherAccount);
+            });
             it('reverts when the address account is zero', async function () {
                 await expectRevert(this.token.setAddressFee(
                     ZERO_ADDRESS, { from: owner }), 'ERC20: newAddressFee could not be 0',
@@ -49,6 +58,10 @@ contract('ERC20Decrypto', function (accounts) {
                     feeBasisPoints: fee
                 });
             });
+            it('change fee', async function () {
+                await this.token.setFee(fee, { from: owner });
+                expect(await this.token.basisPointsRate.call()).to.be.bignumber.equal(fee);
+            });
             it('reverts when the sender has not fee role', async function () {
                 await expectRevert(this.token.setFee(
                     fee, { from: anotherAccount }), 'ERC20: must have fee role to setFees',
@@ -56,7 +69,7 @@ contract('ERC20Decrypto', function (accounts) {
             });
             it('reverts when fee is mayor than 1000', async function () {
                 await expectRevert(this.token.setFee(
-                    new BN(1000), { from: owner }), 'ERC20: newBasisPoints must not been mayor than 1000',
+                    new BN(1000), { from: owner }), 'ERC20: newBasisPoints must not been mayor than 1000 (10%)',
                 );
             });
         });
@@ -144,6 +157,34 @@ contract('ERC20Decrypto', function (accounts) {
                     });
                 });
             });
+        });
+    });
+    describe.only('split', function () {
+        const splitMultiplier = new BN(1);
+        const splitDivider = new BN(1);
+        const doubleBN = new BN(2);
+
+        describe('make split', function () {
+            beforeEach(async function () {
+                await (this.token.split());
+            });
+
+            it('split', async function () {
+                expect(await this.token.splitMultiplier.call()).to.be.bignumber.equal(splitMultiplier.mul(doubleBN));
+                expect(await this.token.splitDivider.call()).to.be.bignumber.equal(splitDivider);
+            });
+            it('emit events', async function () {
+                const { logs } = await (this.token.split());
+                expectEvent.inLogs(logs, 'SplitChange', {
+                    oldSplitMultiplier: splitMultiplier.mul(doubleBN),
+                    newSplitMultiplier: splitMultiplier.mul(new BN(4)),
+                    oldSplitDivider: splitDivider,
+                    newSplitDivider: splitDivider
+                });
+            });
+            //initial balance *2 because apply split
+            shouldBehaveLikeERC20('ERC20', initialBalance.mul(doubleBN), owner, anotherAccount, thirdAccount);
+
         });
     });
 
