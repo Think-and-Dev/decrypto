@@ -17,10 +17,10 @@
     "test": "npx truffle test",
     "ganache": "npx ganache-cli --gasLimit 6500000 --gasPrice 60000000 --defaultBalanceEther 10000 -v -k 'istanbul'",
     "coverage": "npx truffle run coverage",
-    "docgen": "npx solidoc",
     "copy-abis": "npm run clean; npx truffle compile; node copyAbis.js",
     "calc-size": "npm run clean; npx truffle compile; node calcSize.js",
-    "prepare-prod": "npm run copy-abis; npm run docgen"
+    "flatten": "npx waffle flatten",
+    "prepare-prod": "npm run copy-abis;"
   },
   "dependencies": {
     "@openzeppelin/test-helpers": "^0.5.10",
@@ -28,8 +28,11 @@
     "eth-gas-reporter": "^0.2.22",
     "ganache-cli": "^6.12.2",
     "solidity-coverage": "^0.7.16",
-    "solidoc": "^1.0.5",
     "solium": "^1.2.5",
+    "table": "^6.6.0",
     "truffle": "^5.3.2"
+  },
+  "devDependencies": {
+    "ethereum-waffle": "^3.3.0"
   }
 }
