@@ -3,9 +3,10 @@ const { expect } = require('chai');
 const ERC20BurnableMock = artifacts.require('ERC20Decrypto');
 const {
     shouldBehaveLikeERC20,
-    shouldBehaveLikeERC20Transfer,
-    shouldBehaveLikeERC20Approve,
 } = require('./ERC20.behavior');
+const {
+    shouldBehaveLikeERC20Burnable,
+} = require('./behaviors/ERC20Burnable.behavior');
 
 contract('ERC20Decrypto', function (accounts) {
     const [owner, anotherAccount, thirdAccount, ...otherAccounts] = accounts;
@@ -45,7 +46,7 @@ contract('ERC20Decrypto', function (accounts) {
             });
             it('reverts when the sender has not admin role', async function () {
                 await expectRevert(this.token.setAddressFee(
-                    thirdAccount, { from: anotherAccount }), 'ERC20: must have admin role to setOwnerFee',
+                    thirdAccount, { from: anotherAccount }), 'ERC20: must have admin role to setAddressFee',
                 );
             });
 
@@ -62,9 +63,9 @@ contract('ERC20Decrypto', function (accounts) {
                 await this.token.setFee(fee, { from: owner });
                 expect(await this.token.basisPointsRate.call()).to.be.bignumber.equal(fee);
             });
-            it('reverts when the sender has not fee role', async function () {
+            it('reverts when the sender has not admin role', async function () {
                 await expectRevert(this.token.setFee(
-                    fee, { from: anotherAccount }), 'ERC20: must have fee role to setFees',
+                    fee, { from: anotherAccount }), 'ERC20: must have admin role to setFees',
                 );
             });
             it('reverts when fee is mayor than 1000 (10%)', async function () {
@@ -184,6 +185,8 @@ contract('ERC20Decrypto', function (accounts) {
             });
             //initial balance *2 because apply split
             shouldBehaveLikeERC20('ERC20', initialBalance.mul(doubleBN), owner, anotherAccount, thirdAccount);
+            shouldBehaveLikeERC20Burnable(owner, initialBalance.mul(doubleBN), otherAccounts);
+
 
         });
     });
@@ -213,6 +216,8 @@ contract('ERC20Decrypto', function (accounts) {
             });
             //initial balance /2 because apply reverse split
             shouldBehaveLikeERC20('ERC20', initialBalance.div(doubleBN), owner, anotherAccount, thirdAccount);
+            shouldBehaveLikeERC20Burnable(owner, initialBalance.div(doubleBN), otherAccounts);
+
 
         });
     });
@@ -242,6 +247,8 @@ contract('ERC20Decrypto', function (accounts) {
             });
             //initial balance because apply split & reverse split
             shouldBehaveLikeERC20('ERC20', initialBalance, owner, anotherAccount, thirdAccount);
+            shouldBehaveLikeERC20Burnable(owner, initialBalance, otherAccounts);
+
 
         });
     });
@@ -269,6 +276,8 @@ contract('ERC20Decrypto', function (accounts) {
             });
             //initial balance *2  because apply split & reverse split & split
             shouldBehaveLikeERC20('ERC20', initialBalance.mul(doubleBN), owner, anotherAccount, thirdAccount);
+            shouldBehaveLikeERC20Burnable(owner, initialBalance.mul(doubleBN), otherAccounts);
+
 
         });
     });
@@ -300,6 +309,8 @@ contract('ERC20Decrypto', function (accounts) {
             });
             // //initial balance /2  because apply split * 3 & reverse split * 4
             shouldBehaveLikeERC20('ERC20', initialBalance.div(new BN(2)), owner, anotherAccount, thirdAccount);
+            shouldBehaveLikeERC20Burnable(owner, initialBalance.div(new BN(2)), otherAccounts);
+
 
         });
     });

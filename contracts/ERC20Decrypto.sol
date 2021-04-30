@@ -37,10 +37,6 @@ contract ERC20Decrypto is
      * @dev Pauser rol
      */
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    /**
-     * @dev Pauser rol
-     */
-    bytes32 public constant FEE_ROLE = keccak256("FEE_ROLE");
 
     /**
      * @dev Account owner of feed
@@ -119,7 +115,7 @@ contract ERC20Decrypto is
         //TODO see if remove
         __ERC20Pausable_init_unchained();
         //set necessary rols
-        __ERC20Decrypto_init_unchained(name, symbol, owner);
+        __ERC20Decrypto_init_unchained(owner);
     }
 
     /**
@@ -127,18 +123,16 @@ contract ERC20Decrypto is
      * Emit RoleAdminChanged and RoleGranted (pauser and minter)
      */
 
-    function __ERC20Decrypto_init_unchained(
-        string memory name,
-        string memory symbol,
-        address owner
-    ) internal initializer {
+    function __ERC20Decrypto_init_unchained(address owner)
+        internal
+        initializer
+    {
         //set admin rol -- Emit RoleAdminChanged
         _setupRole(DEFAULT_ADMIN_ROLE, owner);
 
         //set minter, pauser and fee rol -- Emit RoleGranted
         _setupRole(MINTER_ROLE, owner);
         _setupRole(PAUSER_ROLE, owner);
-        _setupRole(FEE_ROLE, owner);
     }
 
     /**
@@ -152,8 +146,8 @@ contract ERC20Decrypto is
             hasRole(MINTER_ROLE, _msgSender()),
             "ERC20: must have minter role to mint"
         );
-        uint256 splitValue = _underlyingValue(amount);
-        _mint(to, splitValue);
+        uint256 unformattedValue = _unformattedValue(amount);
+        _mint(to, unformattedValue);
     }
 
     /**
@@ -191,13 +185,13 @@ contract ERC20Decrypto is
      * Requirements:
      * - `recipient` cannot be the zero address.
      * - the caller newBasisPoints not been mayor than 1000 (10%).
-     * - the caller must have the `FEE_ROLE`.
+     * - the caller must have the `ADMIN_ROLE`.
      */
 
     function setFee(uint256 newBasisPoints) public virtual {
         require(
-            hasRole(FEE_ROLE, _msgSender()),
-            "ERC20: must have fee role to setFees"
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
+            "ERC20: must have admin role to setFees"
         );
         // Ensure transparency by hardcoding limit beyond which fees can never be added
         require(
@@ -223,7 +217,7 @@ contract ERC20Decrypto is
     function setAddressFee(address newAddressFee) public virtual {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-            "ERC20: must have admin role to setOwnerFee"
+            "ERC20: must have admin role to setAddressFee"
         );
         // Ensure transparency by hardcoding limit beyond which fees can never be added
         require(
@@ -312,15 +306,9 @@ contract ERC20Decrypto is
         override
         returns (bool)
     {
-        // uint256 splitValue = _underlyingValue(addedValue);
         uint256 formattedValue =
             _formattedValue(_allowances[_msgSender()][spender]);
-        _approve(
-            _msgSender(),
-            spender,
-            formattedValue.add(addedValue)
-            // _allowances[_msgSender()][spender].add(splitValue)
-        );
+        _approve(_msgSender(), spender, formattedValue.add(addedValue));
         return true;
     }
 
@@ -344,7 +332,6 @@ contract ERC20Decrypto is
         override
         returns (bool)
     {
-        // uint256 splitValue = _underlyingValue(subtractedValue);
         uint256 formattedValue =
             _formattedValue(_allowances[_msgSender()][spender]);
 
@@ -367,39 +354,6 @@ contract ERC20Decrypto is
     }
 
     /**
-     * @dev Destroys `amount` tokens from the caller.
-     *
-     * See {ERC20-_burn}.
-     */
-    function burn(uint256 amount) public virtual override {
-        uint256 splitAmount = _underlyingValue(amount);
-        _burn(_msgSender(), splitAmount);
-    }
-
-    /**
-     * @dev Destroys `amount` tokens from `account`, deducting from the caller's
-     * allowance.
-     *
-     * See {ERC20-_burn} and {ERC20-allowance}.
-     *
-     * Requirements:
-     *
-     * - the caller must have allowance for ``accounts``'s tokens of at least
-     * `amount`.
-     */
-    function burnFrom(address account, uint256 amount) public virtual override {
-        uint256 udnerlyingAmount = _underlyingValue(amount);
-        uint256 decreasedAllowance =
-            allowance(account, _msgSender()).sub(
-                amount,
-                "ERC20: burn amount exceeds allowance"
-            );
-        //TODO send approv with out underlying
-        _approve(account, _msgSender(), decreasedAllowance);
-        _burn(account, udnerlyingAmount);
-    }
-
-    /**
      * @dev See {IERC20-transferFrom}.
      *
      * Emits an {Approval} event indicating the updated allowance. This is not
@@ -418,7 +372,7 @@ contract ERC20Decrypto is
         uint256 amount
     ) public virtual override returns (bool) {
         _transfer(sender, recipient, amount);
-        uint256 underlyingAmount = _underlyingValue(amount);
+        uint256 underlyingAmount = _unformattedValue(amount);
         uint256 formattedAmount =
             _formattedValue(
                 _allowances[sender][_msgSender()].sub(
@@ -434,7 +388,7 @@ contract ERC20Decrypto is
      * @dev Get the underlying value of the split
      *
      */
-    function _underlyingValue(uint256 value) internal view returns (uint256) {
+    function _unformattedValue(uint256 value) internal view returns (uint256) {
         return value.mul(splitDivider).div(splitMultiplier);
     }
 
@@ -508,14 +462,14 @@ contract ERC20Decrypto is
         _beforeTokenTransfer(sender, recipient, amount);
 
         //calculate unerlying amount
-        uint256 splitAmount = _underlyingValue(amount);
+        uint256 unformattedValue = _unformattedValue(amount);
         //set fee
-        uint256 fee = (splitAmount.mul(basisPointsRate)).div(10000);
+        uint256 fee = (unformattedValue.mul(basisPointsRate)).div(10000);
         //value - fee
-        uint256 sendAmount = splitAmount.sub(fee);
+        uint256 sendAmount = unformattedValue.sub(fee);
         //sub amount in sender balance
         _balances[sender] = _balances[sender].sub(
-            splitAmount,
+            unformattedValue,
             "ERC20: transfer amount exceeds balance"
         );
         //add sendAmount in recipent balance
@@ -533,8 +487,8 @@ contract ERC20Decrypto is
         address to,
         uint256 amount
     ) internal virtual override(ERC20Upgradeable, ERC20PausableUpgradeable) {
-        uint256 splitAmount = _underlyingValue(amount);
-        super._beforeTokenTransfer(from, to, splitAmount);
+        uint256 unformattedValue = _unformattedValue(amount);
+        super._beforeTokenTransfer(from, to, unformattedValue);
     }
 
     /**
@@ -558,8 +512,30 @@ contract ERC20Decrypto is
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
-        uint256 splitAmount = _underlyingValue(amount);
-        _allowances[owner][spender] = splitAmount;
+        uint256 unformattedValue = _unformattedValue(amount);
+        _allowances[owner][spender] = unformattedValue;
         emit Approval(owner, spender, amount);
+    }
+
+    /**
+     * @dev Destroys `amount` tokens from `account`, reducing the
+     * total supply.
+     *
+     * Emits a {Transfer} event with `to` set to the zero address.
+     *
+     * Requirements:
+     *
+     * - `account` cannot be the zero address.
+     * - `account` must have at least `amount` tokens.
+     */
+    function _burn(address account, uint256 amount) internal virtual override {
+        require(account != address(0), "ERC20: burn from the zero address");
+
+        _beforeTokenTransfer(account, address(0), amount);
+        uint256 unformattedAmount = _unformattedValue(amount);
+
+        _balances[account] = _balances[account].sub(unformattedAmount, "ERC20: burn amount exceeds balance");
+        _totalSupply = _totalSupply.sub(unformattedAmount);
+        emit Transfer(account, address(0), amount);
     }
 }
