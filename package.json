@@ -20,7 +20,8 @@
     "copy-abis": "npm run clean; npx truffle compile; node copyAbis.js",
     "calc-size": "npm run clean; npx truffle compile; node calcSize.js",
     "flatten": "npx waffle flatten",
-    "prepare-prod": "npm run copy-abis;"
+    "docgen": "npx solidoc",
+    "prepare-prod": "npm run copy-abis; npm run docgen; npm run flatten;"
   },
   "dependencies": {
     "@openzeppelin/test-helpers": "^0.5.10",
@@ -30,7 +31,8 @@
     "solidity-coverage": "^0.7.16",
     "solium": "^1.2.5",
     "table": "^6.6.0",
-    "truffle": "^5.3.2"
+    "truffle": "^5.3.2",
+    "@thinkanddev/solidoc": "^3.0.0"
   },
   "devDependencies": {
     "ethereum-waffle": "^3.3.0"
