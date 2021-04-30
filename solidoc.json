@@ -36,8 +36,6 @@
         "ERC20CappedUpgradeable.json",
         "IERC20PermitUpgradeable.json",
         "ERC20DecimalsMockUpgradeable.json",
-        "ERC20MockUpg.json",
-        "radeable.json",
-        "MathUpgradeable.json"
+        "ERC20MockUpgradeable.json"
     ]
 }
