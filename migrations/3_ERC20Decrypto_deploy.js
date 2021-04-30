@@ -8,11 +8,11 @@ module.exports = async function(deployer, network, accounts) {
    const owner = isLocalDeploy ? accounts[0] : deployedJson.Owner;
    const proxyAdminAddr = deployedJson.ProxyAdmin;
 
-   const tokenSymbol = "INSERT_SYMBOL";
+   const tokenSymbol = "DTKN";
    if (isLocalDeploy || !deployedJson[tokenSymbol]) {
       deployedJson[tokenSymbol] = {};
       deployedJson[tokenSymbol].Symbol = tokenSymbol;
-      deployedJson[tokenSymbol].TokenName = "INSERT TOKEN NAME";
+      deployedJson[tokenSymbol].TokenName = "Decrypto token";
       deployedJson[tokenSymbol].Decimals = 18;
    }
    const tokenName = deployedJson[tokenSymbol].TokenName;
