@@ -372,11 +372,10 @@ contract ERC20Decrypto is
         uint256 amount
     ) public virtual override returns (bool) {
         _transfer(sender, recipient, amount);
-        uint256 underlyingAmount = _unformattedValue(amount);
         uint256 formattedAmount =
             _formattedValue(
                 _allowances[sender][_msgSender()].sub(
-                    underlyingAmount,
+                    _unformattedValue(amount),
                     "ERC20: transfer amount exceeds allowance"
                 )
             );
@@ -487,8 +486,7 @@ contract ERC20Decrypto is
         address to,
         uint256 amount
     ) internal virtual override(ERC20Upgradeable, ERC20PausableUpgradeable) {
-        uint256 unformattedValue = _unformattedValue(amount);
-        super._beforeTokenTransfer(from, to, unformattedValue);
+        super._beforeTokenTransfer(from, to, _unformattedValue(amount));
     }
 
     /**
@@ -512,8 +510,7 @@ contract ERC20Decrypto is
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
-        uint256 unformattedValue = _unformattedValue(amount);
-        _allowances[owner][spender] = unformattedValue;
+        _allowances[owner][spender] = _unformattedValue(amount);
         emit Approval(owner, spender, amount);
     }
 
@@ -534,7 +531,10 @@ contract ERC20Decrypto is
         _beforeTokenTransfer(account, address(0), amount);
         uint256 unformattedAmount = _unformattedValue(amount);
 
-        _balances[account] = _balances[account].sub(unformattedAmount, "ERC20: burn amount exceeds balance");
+        _balances[account] = _balances[account].sub(
+            unformattedAmount,
+            "ERC20: burn amount exceeds balance"
+        );
         _totalSupply = _totalSupply.sub(unformattedAmount);
         emit Transfer(account, address(0), amount);
     }
