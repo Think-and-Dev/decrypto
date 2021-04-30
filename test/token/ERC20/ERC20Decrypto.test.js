@@ -67,9 +67,9 @@ contract('ERC20Decrypto', function (accounts) {
                     fee, { from: anotherAccount }), 'ERC20: must have fee role to setFees',
                 );
             });
-            it('reverts when fee is mayor than 1000', async function () {
+            it('reverts when fee is mayor than 1000 (10%)', async function () {
                 await expectRevert(this.token.setFee(
-                    new BN(1000), { from: owner }), 'ERC20: newBasisPoints must not been mayor than 1000 (10%)',
+                    new BN(1000), { from: owner }), 'ERC20: newBasisPoints must not been mayor than 1000',
                 );
             });
         });
@@ -119,7 +119,7 @@ contract('ERC20Decrypto', function (accounts) {
                     });
                 });
             });
-            describe('transfer one account to other and the addressFee recive a fee', function () {
+            describe('transfer one account to other by spender (transferFrom) and the addressFee recive a fee', function () {
                 beforeEach(async function () {
                     //approve other account
                     await this.token.approve(otherAccounts[0], amountBN, { from: anotherAccount });
@@ -159,7 +159,7 @@ contract('ERC20Decrypto', function (accounts) {
             });
         });
     });
-    describe.only('split', function () {
+    describe('split', function () {
         const splitMultiplier = new BN(1);
         const splitDivider = new BN(1);
         const doubleBN = new BN(2);
@@ -184,6 +184,122 @@ contract('ERC20Decrypto', function (accounts) {
             });
             //initial balance *2 because apply split
             shouldBehaveLikeERC20('ERC20', initialBalance.mul(doubleBN), owner, anotherAccount, thirdAccount);
+
+        });
+    });
+
+    describe('reverse split', function () {
+        const splitMultiplier = new BN(1);
+        const splitDivider = new BN(1);
+        const doubleBN = new BN(2);
+
+        describe('make reverse split', function () {
+            beforeEach(async function () {
+                await (this.token.reverseSplit());
+            });
+
+            it('reverse split', async function () {
+                expect(await this.token.splitMultiplier.call()).to.be.bignumber.equal(splitMultiplier);
+                expect(await this.token.splitDivider.call()).to.be.bignumber.equal(splitDivider.mul(doubleBN));
+            });
+            it('emit events', async function () {
+                const { logs } = await (this.token.reverseSplit());
+                expectEvent.inLogs(logs, 'SplitChange', {
+                    oldSplitMultiplier: splitMultiplier,
+                    newSplitMultiplier: splitMultiplier,
+                    oldSplitDivider: splitDivider.mul(doubleBN),
+                    newSplitDivider: splitDivider.mul(new BN(4)),
+                });
+            });
+            //initial balance /2 because apply reverse split
+            shouldBehaveLikeERC20('ERC20', initialBalance.div(doubleBN), owner, anotherAccount, thirdAccount);
+
+        });
+    });
+    describe('apply split and reverse split', function () {
+        const splitMultiplier = new BN(1);
+        const splitDivider = new BN(1);
+        const doubleBN = new BN(2);
+
+        describe('make split & reverse split', function () {
+            beforeEach(async function () {
+                await (this.token.split());
+                await (this.token.reverseSplit());
+            });
+
+            it('split & reverse split', async function () {
+                expect(await this.token.splitMultiplier.call()).to.be.bignumber.equal(splitMultiplier.mul(doubleBN));
+                expect(await this.token.splitDivider.call()).to.be.bignumber.equal(splitDivider.mul(doubleBN));
+            });
+            it('emit events', async function () {
+                const { logs } = await (this.token.split());
+                expectEvent.inLogs(logs, 'SplitChange', {
+                    oldSplitMultiplier: splitMultiplier.mul(doubleBN),
+                    newSplitMultiplier: splitMultiplier.mul(new BN(4)),
+                    oldSplitDivider: splitDivider.mul(doubleBN),
+                    newSplitDivider: splitDivider.mul(doubleBN)
+                });
+            });
+            //initial balance because apply split & reverse split
+            shouldBehaveLikeERC20('ERC20', initialBalance, owner, anotherAccount, thirdAccount);
+
+        });
+    });
+    describe('apply split, reverse split and split', function () {
+        const splitMultiplier = new BN(1);
+        const splitDivider = new BN(1);
+        const doubleBN = new BN(2);
+
+        describe('make split, reverse split and split', function () {
+            beforeEach(async function () {
+                await (this.token.split());
+                await (this.token.reverseSplit());
+                const { logs } = await (this.token.split());
+                expectEvent.inLogs(logs, 'SplitChange', {
+                    oldSplitMultiplier: splitMultiplier.mul(doubleBN),
+                    newSplitMultiplier: splitMultiplier.mul(new BN(4)),
+                    oldSplitDivider: splitDivider.mul(doubleBN),
+                    newSplitDivider: splitDivider.mul(doubleBN)
+                });
+            });
+
+            it('everse split', async function () {
+                expect(await this.token.splitMultiplier.call()).to.be.bignumber.equal(splitMultiplier.mul(new BN(4)));
+                expect(await this.token.splitDivider.call()).to.be.bignumber.equal(splitDivider.mul(doubleBN));
+            });
+            //initial balance *2  because apply split & reverse split & split
+            shouldBehaveLikeERC20('ERC20', initialBalance.mul(doubleBN), owner, anotherAccount, thirdAccount);
+
+        });
+    });
+    describe('apply split * 3 and reverse split *4', function () {
+        const splitMultiplier = new BN(1);
+        const splitDivider = new BN(1);
+        const tripleBN = new BN(8);
+
+        describe('make split, reverse split and split', function () {
+            beforeEach(async function () {
+                for (let index = 0; index < 3; index++) {
+                    await (this.token.split());
+                }
+                for (let index = 0; index < 3; index++) {
+                    await (this.token.reverseSplit());
+                }
+                const { logs } = await (this.token.reverseSplit());
+                expectEvent.inLogs(logs, 'SplitChange', {
+                    oldSplitMultiplier: splitMultiplier.mul(tripleBN),
+                    newSplitMultiplier: splitMultiplier.mul(tripleBN),
+                    oldSplitDivider: splitDivider.mul(tripleBN),
+                    newSplitDivider: splitDivider.mul(new BN(16))
+                });
+            });
+
+            it('everse split', async function () {
+                expect(await this.token.splitMultiplier.call()).to.be.bignumber.equal(splitMultiplier.mul(tripleBN));
+                expect(await this.token.splitDivider.call()).to.be.bignumber.equal(splitDivider.mul(new BN(16)));
+            });
+            // //initial balance /2  because apply split * 3 & reverse split * 4
+            shouldBehaveLikeERC20('ERC20', initialBalance.div(new BN(2)), owner, anotherAccount, thirdAccount);
 
         });
     });

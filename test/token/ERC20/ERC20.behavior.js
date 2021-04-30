@@ -86,7 +86,7 @@ function shouldBehaveLikeERC20(errorPrefix, initialSupply, initialHolder, recipi
           });
 
           describe('when the token owner does not have enough balance', function () {
-            const amount = initialSupply.addn(1);
+            const amount = initialSupply.addn(2);
 
             it('reverts', async function () {
               await expectRevert(this.token.transferFrom(
@@ -112,7 +112,7 @@ function shouldBehaveLikeERC20(errorPrefix, initialSupply, initialHolder, recipi
           });
 
           describe('when the token owner does not have enough balance', function () {
-            const amount = initialSupply.addn(1);
+            const amount = initialSupply.addn(2);
 
             it('reverts', async function () {
               await expectRevert(this.token.transferFrom(
@@ -164,11 +164,9 @@ function shouldBehaveLikeERC20(errorPrefix, initialSupply, initialHolder, recipi
 function shouldBehaveLikeERC20Transfer(errorPrefix, from, to, balance, transfer) {
   describe('when the recipient is not the zero address', function () {
     describe('when the sender does not have enough balance', function () {
-      const amount = balance.addn(1);
+      const amount = balance.addn(2);
 
-      it.only('reverts', async function () {
-        console.log("===>balance", (await this.token.balanceOf(from)).toString());
-        console.log("amount===>",amount);
+      it('reverts', async function () {
         await expectRevert(transfer.call(this, from, to, amount),
           `${errorPrefix}: transfer amount exceeds balance`,
         );
@@ -266,7 +264,7 @@ function shouldBehaveLikeERC20Approve(errorPrefix, owner, spender, supply, appro
     });
 
     describe('when the sender does not have enough balance', function () {
-      const amount = supply.addn(1);
+      const amount = supply.addn(2);
 
       it('emits an approval event', async function () {
         const { logs } = await approve.call(this, owner, spender, amount);
@@ -281,8 +279,6 @@ function shouldBehaveLikeERC20Approve(errorPrefix, owner, spender, supply, appro
       describe('when there was no approved amount before', function () {
         it('approves the requested amount', async function () {
           await approve.call(this, owner, spender, amount);
-          console.log("approve=====>", amount.toString())
-
           expect(await this.token.allowance(owner, spender)).to.be.bignumber.equal(amount);
         });
       });
