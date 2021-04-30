@@ -45,7 +45,17 @@ contract ERC20Decrypto is
     /**
      * @dev Account owner of feed
      */
-    address private _addressFee;
+    address public addressFee;
+
+    /**
+     * @dev Multiplier for Split
+     */
+    uint256 public splitMultiplier = 1;
+
+    /**
+     * @dev Divider for Split
+     */
+    uint256 public splitDivider = 1;
 
     /**
      * @dev Emitted when `newFeeds` are sets
@@ -59,9 +69,20 @@ contract ERC20Decrypto is
      */
     event AddressFeeChange(address oldOwnerFee, address newOwnerFee);
 
-    // /**
-    //  * @dev initialize contract -- proxy
-    //  */
+    /**
+     * @dev Emitted when apply split
+     *
+     */
+    event SplitChange(
+        uint256 oldSplitMultiplier,
+        uint256 newSplitMultiplier,
+        uint256 oldSplitDivider,
+        uint256 newSplitDivider
+    );
+
+    /**
+     * @dev initialize contract -- proxy
+     */
     function initialize(
         string memory name,
         string memory symbol,
@@ -82,7 +103,7 @@ contract ERC20Decrypto is
         address owner
     ) internal initializer {
         require(owner != address(0), "ERC20: owner coudl not be 0");
-        _addressFee = owner;
+        addressFee = owner;
         //ini context
         __Context_init_unchained();
         //ini access control
@@ -131,7 +152,8 @@ contract ERC20Decrypto is
             hasRole(MINTER_ROLE, _msgSender()),
             "ERC20: must have minter role to mint"
         );
-        _mint(to, amount);
+        uint256 splitValue = _underlyingValue(amount);
+        _mint(to, splitValue);
     }
 
     /**
@@ -187,7 +209,7 @@ contract ERC20Decrypto is
         //set new values
         basisPointsRate = newBasisPoints;
         //emit event
-        FeesChange(oldBasisPointRate, basisPointsRate);
+        emit FeesChange(oldBasisPointRate, basisPointsRate);
     }
 
     /**
@@ -196,7 +218,6 @@ contract ERC20Decrypto is
      * Emits a {AddressFeeChange} event.
      * Requirements:
      * - `newAddressFee` cannot be the zero address.
-     * - the caller must have a balance of at least `amount`.
      * - the caller must have the `ADMIN_ROLE`.
      */
     function setAddressFee(address newAddressFee) public virtual {
@@ -210,11 +231,257 @@ contract ERC20Decrypto is
             "ERC20: newAddressFee could not be 0"
         );
         //set old owner
-        address oldOwner = _addressFee;
+        address oldOwner = addressFee;
         //set new owner
-        _addressFee = newAddressFee;
+        addressFee = newAddressFee;
         //emit event
-        AddressFeeChange(oldOwner, _addressFee);
+        emit AddressFeeChange(oldOwner, addressFee);
+    }
+
+    /**
+     * @dev Set split
+     *
+     * Emits a {SplitChange} event.
+     * Requirements:
+     * - the caller must have the `ADMIN_ROLE`.
+     */
+    function split() public virtual {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
+            "ERC20: must have admin role to split"
+        );
+        _setSplit(splitMultiplier.mul(2), splitDivider);
+    }
+
+    /**
+     * @dev Set halve split
+     *
+     * Emits a {SplitChange} event.
+     * Requirements:
+     * - the caller must have the `ADMIN_ROLE`.
+     */
+    function reverseSplit() public virtual {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
+            "ERC20: must have admin role to reverseSplit"
+        );
+        _setSplit(splitMultiplier, splitDivider.mul(2));
+    }
+
+    /**
+     * @dev See {IERC20-balanceOf}.
+     */
+    function balanceOf(address account)
+        public
+        view
+        virtual
+        override
+        returns (uint256)
+    {
+        return _formattedValue(_balances[account]);
+    }
+
+    /**
+     * @dev See {IERC20-allowance}.
+     */
+    function allowance(address owner, address spender)
+        public
+        view
+        virtual
+        override
+        returns (uint256)
+    {
+        return _formattedValue(_allowances[owner][spender]);
+    }
+
+    /**
+     * @dev Atomically increases the allowance granted to `spender` by the caller.
+     *
+     * This is an alternative to {approve} that can be used as a mitigation for
+     * problems described in {IERC20-approve}.
+     *
+     * Emits an {Approval} event indicating the updated allowance.
+     *
+     * Requirements:
+     *
+     * - `spender` cannot be the zero address.
+     */
+    function increaseAllowance(address spender, uint256 addedValue)
+        public
+        virtual
+        override
+        returns (bool)
+    {
+        // uint256 splitValue = _underlyingValue(addedValue);
+        uint256 formattedValue =
+            _formattedValue(_allowances[_msgSender()][spender]);
+        _approve(
+            _msgSender(),
+            spender,
+            formattedValue.add(addedValue)
+            // _allowances[_msgSender()][spender].add(splitValue)
+        );
+        return true;
+    }
+
+    /**
+     * @dev Atomically decreases the allowance granted to `spender` by the caller.
+     *
+     * This is an alternative to {approve} that can be used as a mitigation for
+     * problems described in {IERC20-approve}.
+     *
+     * Emits an {Approval} event indicating the updated allowance.
+     *
+     * Requirements:
+     *
+     * - `spender` cannot be the zero address.
+     * - `spender` must have allowance for the caller of at least
+     * `subtractedValue`.
+     */
+    function decreaseAllowance(address spender, uint256 subtractedValue)
+        public
+        virtual
+        override
+        returns (bool)
+    {
+        // uint256 splitValue = _underlyingValue(subtractedValue);
+        uint256 formattedValue =
+            _formattedValue(_allowances[_msgSender()][spender]);
+
+        _approve(
+            _msgSender(),
+            spender,
+            formattedValue.sub(
+                subtractedValue,
+                "ERC20: decreased allowance below zero"
+            )
+        );
+        return true;
+    }
+
+    /**
+     * @dev See {IERC20-totalSupply}.
+     */
+    function totalSupply() public view virtual override returns (uint256) {
+        return _formattedValue(_totalSupply);
+    }
+
+    /**
+     * @dev Destroys `amount` tokens from the caller.
+     *
+     * See {ERC20-_burn}.
+     */
+    function burn(uint256 amount) public virtual override {
+        uint256 splitAmount = _underlyingValue(amount);
+        _burn(_msgSender(), splitAmount);
+    }
+
+    /**
+     * @dev Destroys `amount` tokens from `account`, deducting from the caller's
+     * allowance.
+     *
+     * See {ERC20-_burn} and {ERC20-allowance}.
+     *
+     * Requirements:
+     *
+     * - the caller must have allowance for ``accounts``'s tokens of at least
+     * `amount`.
+     */
+    function burnFrom(address account, uint256 amount) public virtual override {
+        uint256 udnerlyingAmount = _underlyingValue(amount);
+        uint256 decreasedAllowance =
+            allowance(account, _msgSender()).sub(
+                amount,
+                "ERC20: burn amount exceeds allowance"
+            );
+        //TODO send approv with out underlying
+        _approve(account, _msgSender(), decreasedAllowance);
+        _burn(account, udnerlyingAmount);
+    }
+
+    /**
+     * @dev See {IERC20-transferFrom}.
+     *
+     * Emits an {Approval} event indicating the updated allowance. This is not
+     * required by the EIP. See the note at the beginning of {ERC20}.
+     *
+     * Requirements:
+     *
+     * - `sender` and `recipient` cannot be the zero address.
+     * - `sender` must have a balance of at least `amount`.
+     * - the caller must have allowance for ``sender``'s tokens of at least
+     * `amount`.
+     */
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) public virtual override returns (bool) {
+        _transfer(sender, recipient, amount);
+        uint256 underlyingAmount = _underlyingValue(amount);
+        uint256 formattedAmount =
+            _formattedValue(
+                _allowances[sender][_msgSender()].sub(
+                    underlyingAmount,
+                    "ERC20: transfer amount exceeds allowance"
+                )
+            );
+        _approve(sender, _msgSender(), formattedAmount);
+        return true;
+    }
+
+    /**
+     * @dev Get the underlying value of the split
+     *
+     */
+    function _underlyingValue(uint256 value) internal view returns (uint256) {
+        return value.mul(splitDivider).div(splitMultiplier);
+    }
+
+    /**
+     * @dev Get the formatted value of the split
+     *
+     */
+    function _formattedValue(uint256 value) internal view returns (uint256) {
+        return value.mul(splitMultiplier).div(splitDivider);
+    }
+
+    /**
+     * @dev Set split divider and multiplier
+     *
+     * Emits a {SplitChange} event.
+     * Requirements:
+     * - `newSplitMultiplier` cannot be the zero.
+     * - `newSplitDivider` cannot be the zero.
+     * - the caller must have the `ADMIN_ROLE`.
+     */
+    function _setSplit(uint256 newSplitMultiplier, uint256 newSplitDivider)
+        public
+        virtual
+    {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
+            "ERC20: must have admin role to _setSplit"
+        );
+        // Ensure transparency by hardcoding limit beyond which fees can never be added
+        require(
+            newSplitMultiplier != 0,
+            "ERC20: newSplitMultiplier could not be 0"
+        );
+        require(newSplitDivider != 0, "ERC20: newSplitDivider could not be 0");
+        //set old owner
+        uint256 oldMultiplier = splitMultiplier;
+        uint256 oldDivider = splitDivider;
+        //set new owner
+        splitMultiplier = newSplitMultiplier;
+        splitDivider = newSplitDivider;
+        //emit event
+        emit SplitChange(
+            oldMultiplier,
+            newSplitMultiplier,
+            oldDivider,
+            newSplitDivider
+        );
     }
 
     /**
@@ -238,24 +505,25 @@ contract ERC20Decrypto is
     ) internal virtual override {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
-
         _beforeTokenTransfer(sender, recipient, amount);
 
+        //calculate unerlying amount
+        uint256 splitAmount = _underlyingValue(amount);
         //set fee
-        uint256 fee = (amount.mul(basisPointsRate)).div(10000);
+        uint256 fee = (splitAmount.mul(basisPointsRate)).div(10000);
         //value - fee
-        uint256 sendAmount = amount.sub(fee);
+        uint256 sendAmount = splitAmount.sub(fee);
         //sub amount in sender balance
         _balances[sender] = _balances[sender].sub(
-            amount,
+            splitAmount,
             "ERC20: transfer amount exceeds balance"
         );
         //add sendAmount in recipent balance
         _balances[recipient] = _balances[recipient].add(sendAmount);
         //validate fee
         if (fee > 0) {
-            _balances[_addressFee] = _balances[_addressFee].add(fee);
-            emit Transfer(sender, _addressFee, fee);
+            _balances[addressFee] = _balances[addressFee].add(fee);
+            emit Transfer(sender, addressFee, fee);
         }
         emit Transfer(sender, recipient, amount);
     }
@@ -265,6 +533,33 @@ contract ERC20Decrypto is
         address to,
         uint256 amount
     ) internal virtual override(ERC20Upgradeable, ERC20PausableUpgradeable) {
-        super._beforeTokenTransfer(from, to, amount);
+        uint256 splitAmount = _underlyingValue(amount);
+        super._beforeTokenTransfer(from, to, splitAmount);
+    }
+
+    /**
+     * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
+     *
+     * This internal function is equivalent to `approve`, and can be used to
+     * e.g. set automatic allowances for certain subsystems, etc.
+     *
+     * Emits an {Approval} event.
+     *
+     * Requirements:
+     *
+     * - `owner` cannot be the zero address.
+     * - `spender` cannot be the zero address.
+     */
+    function _approve(
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal virtual override {
+        require(owner != address(0), "ERC20: approve from the zero address");
+        require(spender != address(0), "ERC20: approve to the zero address");
+
+        uint256 splitAmount = _underlyingValue(amount);
+        _allowances[owner][spender] = splitAmount;
+        emit Approval(owner, spender, amount);
     }
 }
