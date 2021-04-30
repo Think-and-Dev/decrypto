@@ -45,17 +45,17 @@ contract ERC20Decrypto is
     /**
      * @dev Account owner of feed
      */
-    address private addressFee;
+    address public addressFee;
 
     /**
      * @dev Multiplier for Split
      */
-    uint256 public splitMultiplier = 1000000000000000000;
+    uint256 public splitMultiplier = 1;
 
     /**
      * @dev Divider for Split
      */
-    uint256 public splitDivider = 1000000000000000000;
+    uint256 public splitDivider = 1;
 
     /**
      * @dev Emitted when `newFeeds` are sets
