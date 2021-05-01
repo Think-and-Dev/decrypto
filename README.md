@@ -3,7 +3,7 @@
 Decrypto ERC20 representing stocks
 
 
-## Pre requisits
+## Pre requisites
 
 - Install node.js 14 or higher https://nodejs.org/en/download/
 - Install yarn `npm install yarn -g`
@@ -78,7 +78,7 @@ If you change the tiker and run again the deploy, the file file will look like t
             "Decimals": 18,
             "Logic": "0xfef844d19347a7848ce9b9475266c4b78d3b1baf",
             "Proxy": "0x33b58b84004c8da543c1fa73d05c5eeb441de549"
-        }
+        },
         "OTHER": {
             "Symbol": "OTHER",
             "TokenName": "Decrypto token",
