@@ -67,7 +67,7 @@ module.exports = {
     rsktestnet: {
       provider: () => new HDWalletProvider(mnemonic, `https://public-node.testnet.rsk.co`),
       network_id: 31,       // Rsk Testnet's id
-      gas: 6500000,        // Ropsten has a lower block limit than mainnet
+      gas: 65000000,        // Ropsten has a lower block limit than mainnet
       gasPrice: 68000000,
       skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
     },
@@ -75,7 +75,7 @@ module.exports = {
     rskmainnet: {
       provider: () => new HDWalletProvider(mnemonic, `https://public-node.rsk.co`),
       network_id: 30,       // Rsk Testnet's id
-      gas: 6500000,        // Ropsten has a lower block limit than mainnet
+      gas: 65000000,        // Ropsten has a lower block limit than mainnet
       gasPrice: 68000000,
       skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
     },
