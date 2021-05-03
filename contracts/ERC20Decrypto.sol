@@ -26,7 +26,7 @@ contract ERC20Decrypto is
     /**
      * @dev Base fee to apply to a transfer
      */
-    uint256 public basisPointsRate = 0;
+    uint256 public basisPointsRate;
 
     /**
      * @dev Minter rol
@@ -102,6 +102,7 @@ contract ERC20Decrypto is
         addressFee = owner;
         splitMultiplier = 1;
         splitDivider = 1;
+        basisPointsRate = 0;
         //ini context
         __Context_init_unchained();
         //ini access control
