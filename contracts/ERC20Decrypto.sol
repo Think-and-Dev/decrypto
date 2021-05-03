@@ -10,6 +10,10 @@ import "./zeppelin/access/AccessControlUpgradeable.sol";
 import "./zeppelin/utils/ContextUpgradeable.sol";
 import "./zeppelin/math/SafeMathUpgradeable.sol";
 
+// Remove this comment
+// Context => get the sender an de data
+// Access => implement and validate the rols access
+
 contract ERC20Decrypto is
     Initializable,
     ContextUpgradeable,
