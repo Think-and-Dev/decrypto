@@ -1626,7 +1626,7 @@ contract ERC20Decrypto is
     /**
      * @dev Base fee to apply to a transfer
      */
-    uint256 public basisPointsRate = 0;
+    uint256 public basisPointsRate;
 
     /**
      * @dev Minter rol
@@ -1646,12 +1646,12 @@ contract ERC20Decrypto is
     /**
      * @dev Multiplier for Split
      */
-    uint256 public splitMultiplier = 1;
+    uint256 public splitMultiplier;
 
     /**
      * @dev Divider for Split
      */
-    uint256 public splitDivider = 1;
+    uint256 public splitDivider;
 
     /**
      * @dev Emitted when `newFeeds` are sets
@@ -1700,6 +1700,9 @@ contract ERC20Decrypto is
     ) internal initializer {
         require(owner != address(0), "ERC20: owner coudl not be 0");
         addressFee = owner;
+        splitMultiplier = 1;
+        splitDivider = 1;
+        basisPointsRate = 0;
         //ini context
         __Context_init_unchained();
         //ini access control
