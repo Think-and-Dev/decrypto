@@ -383,6 +383,19 @@ contract ERC20Decrypto is
     }
 
     /**
+     * @dev Destroys `amount` tokens from the caller.
+     *
+     * See {ERC20-_burn}.
+     */
+    function burn(uint256 amount) public virtual override {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
+            "ERC20: must have admin role to burn"
+        );
+        _burn(_msgSender(), amount);
+    }
+
+    /**
      * @dev Get the underlying value of the split
      *
      */
