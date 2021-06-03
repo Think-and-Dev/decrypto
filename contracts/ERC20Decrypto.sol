@@ -72,6 +72,8 @@ contract ERC20Decrypto is
         uint256 newSplitDivider
     );
 
+    event TransferBatch(address from, address[] to, uint256[] values);
+
     /**
      * @dev initialize contract -- proxy
      */
@@ -147,6 +149,39 @@ contract ERC20Decrypto is
         );
         uint256 unformattedValue = _unformattedValue(amount);
         _mint(to, unformattedValue);
+    }
+
+    /**
+     * @dev Creates `amounts` new tokens for `accounts`.
+     *
+     * Requirements:
+     * - the caller must have the `MINTER_ROLE`.
+     * - the accounts addresses must not be zero.
+     */
+    function mintBatch(address[] memory accounts, uint256[] memory amounts)
+        public
+        virtual
+    {
+        require(
+            hasRole(MINTER_ROLE, _msgSender()),
+            "ERC20: must have minter role to mint"
+        );
+        require(
+            accounts.length == amounts.length,
+            "ERC20: accounts and amounts length mismatch"
+        );
+
+        for (uint256 i = 0; i < accounts.length; ++i) {
+            address account = accounts[i];
+            require(account != address(0), "ERC20: mint to the zero address");
+            uint256 unformattedValue = _unformattedValue(amounts[i]);
+
+            _beforeTokenTransfer(address(0), account, unformattedValue);
+            _totalSupply = _totalSupply.add(unformattedValue);
+
+            _balances[account] = _balances[account].add(unformattedValue);
+        }
+        emit TransferBatch(address(0), accounts, amounts);
     }
 
     /**
@@ -383,6 +418,60 @@ contract ERC20Decrypto is
     }
 
     /**
+     * @dev Moves `amount` tokens from `sender` to `recipients` using the
+     * allowance mechanism. `amounts` are then deducted from the caller's
+     * allowance.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+     *
+     * Emits a {TransferBatch} event.
+     */
+    function transferBatch(
+        address[] memory recipients,
+        uint256[] memory amounts
+    ) public virtual returns (bool) {
+        _transferBatch(_msgSender(), recipients, amounts);
+
+        return true;
+    }
+
+    /**
+     * @dev See {IERC20-transferFrom}.
+     *
+     * Emits an {Approval} event indicating the updated allowance. This is not
+     * required by the EIP. See the note at the beginning of {ERC20}.
+     *
+     * Requirements:
+     *
+     * - `sender` and `recipient` cannot be the zero address.
+     * - `sender` must have a balance of at least `amount`.
+     * - the caller must have allowance for ``sender``'s tokens of at least
+     * `amount`.
+     */
+
+    function transferFromBatch(
+        address sender,
+        address[] memory recipients,
+        uint256[] memory amounts
+    ) public virtual returns (bool) {
+        _transferBatch(sender, recipients, amounts);
+        uint256 amountsTotal;
+        //get the totals of amounts
+        for (uint256 i = 0; i < amounts.length; ++i) {
+            amountsTotal = amountsTotal + amounts[i];
+        }
+        uint256 formattedAmount =
+            _formattedValue(
+                _allowances[sender][_msgSender()].sub(
+                    _unformattedValue(amountsTotal),
+                    "ERC20: transfer amount exceeds allowance"
+                )
+            );
+        _approve(sender, _msgSender(), formattedAmount);
+        return true;
+    }
+
+    /**
      * @dev Destroys `amount` tokens from the caller.
      *
      * See {ERC20-_burn}.
@@ -393,6 +482,17 @@ contract ERC20Decrypto is
             "ERC20: must have admin role to burn"
         );
         _burn(_msgSender(), amount);
+    }
+
+    function burnBatch(address[] memory accounts, uint256[] memory amounts)
+        public
+        virtual
+    {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
+            "ERC20: must have admin role to burn"
+        );
+        _burnBatch(_msgSender(), accounts, amounts);
     }
 
     /**
@@ -549,5 +649,77 @@ contract ERC20Decrypto is
         );
         _totalSupply = _totalSupply.sub(unformattedAmount);
         emit Transfer(account, address(0), amount);
+    }
+
+    /**
+     * @dev Destroys `amounts` tokens from `accounts`, reducing the
+     * total supply.
+     *
+     * Emits a {Transfer} event with `to` set to the zero address.
+     *
+     * Requirements:
+     *
+     * - `accounts` cannot be the zero address.
+     * - `accounts` must have at least `amount` tokens.
+     */
+    function _burnBatch(
+        address sender,
+        address[] memory accounts,
+        uint256[] memory amounts
+    ) internal virtual {
+        require(
+            accounts.length == amounts.length,
+            "ERC20: accounts and amounts length mismatch"
+        );
+        for (uint256 i = 0; i < accounts.length; ++i) {
+            address account = accounts[i];
+            require(account != address(0), "ERC20: burn from the zero address");
+            _beforeTokenTransfer(account, address(0), amounts[i]);
+            uint256 unformattedAmount = _unformattedValue(amounts[i]);
+            _balances[account] = _balances[account].sub(
+                unformattedAmount,
+                "ERC20: burn amount exceeds balance"
+            );
+            _totalSupply = _totalSupply.sub(unformattedAmount);
+        }
+
+        address[] memory zeroAddress;
+        emit TransferBatch(sender, zeroAddress, amounts);
+    }
+
+    function _transferBatch(
+        address sender,
+        address[] memory recipients,
+        uint256[] memory amounts
+    ) internal virtual {
+        require(sender != address(0), "ERC20: transfer from the zero address");
+        require(
+            recipients.length == amounts.length,
+            "ERC20: accounts and amounts length mismatch"
+        );
+        for (uint256 i = 0; i < recipients.length; ++i) {
+            address recipient = recipients[i];
+            require(recipient != address(0), "ERC20: mint to the zero address");
+            _beforeTokenTransfer(address(0), recipient, amounts[i]);
+            uint256 unformattedAmount = _unformattedValue(amounts[i]);
+            //set fee
+            uint256 fee = (unformattedAmount.mul(basisPointsRate)).div(10000);
+            //calculate unerlying amount
+            uint256 unformattedValue = _unformattedValue(amounts[i]);
+            uint256 sendAmount = unformattedValue.sub(fee);
+            //sub amount in sender balance
+            _balances[sender] = _balances[sender].sub(
+                unformattedValue,
+                "ERC20: transfer amount exceeds balance"
+            );
+            //add sendAmount in recipent balance
+            _balances[recipient] = _balances[recipient].add(sendAmount);
+            //validate fee
+            if (fee > 0) {
+                _balances[addressFee] = _balances[addressFee].add(fee);
+                emit Transfer(sender, addressFee, fee);
+            }
+        }
+        emit TransferBatch(sender, recipients, amounts);
     }
 }
