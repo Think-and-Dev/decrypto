@@ -56,7 +56,6 @@ contract.only('ERC20', function (accounts) {
   beforeEach(async function () {
     this.token = await ERC20Mock.new();
     await this.token.initialize(name, symbol, initialHolder);
-    // await this.token.mint(initialHolder, initialSupply)
   });
 
 
@@ -279,12 +278,6 @@ contract.only('ERC20', function (accounts) {
   });
 
   describe('transfer with fee', async function () {
-    //set amount to transfer
-    const amountBN = new BN(100);
-    //set the transaction fee result
-    // const transactionFee = amountBN.mul(fee).div(new BN('10000'));
-
-
     beforeEach(async function () {
       //set fee 2%
       const { logs } = await this.token.setFee(fee, { from: initialHolder });
