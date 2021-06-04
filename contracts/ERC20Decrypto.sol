@@ -673,7 +673,7 @@ contract ERC20Decrypto is
         );
         for (uint256 i = 0; i < accounts.length; ++i) {
             address account = accounts[i];
-            require(account != address(0), "ERC20: burn from the zero address");
+            require(account != address(0), "ERC20: burn to the zero address");
             _beforeTokenTransfer(account, address(0), amounts[i]);
             uint256 unformattedAmount = _unformattedValue(amounts[i]);
             _balances[account] = _balances[account].sub(
@@ -699,7 +699,7 @@ contract ERC20Decrypto is
         );
         for (uint256 i = 0; i < recipients.length; ++i) {
             address recipient = recipients[i];
-            require(recipient != address(0), "ERC20: mint to the zero address");
+            require(recipient != address(0), "ERC20: transfer to the zero address");
             _beforeTokenTransfer(address(0), recipient, amounts[i]);
             uint256 unformattedAmount = _unformattedValue(amounts[i]);
             //set fee

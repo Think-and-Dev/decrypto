@@ -5332,6 +5332,14 @@ deep-eql@^3.0.1:
   dependencies:
     type-detect "^4.0.0"
 
+deep-equal-extended@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/deep-equal-extended/-/deep-equal-extended-0.0.2.tgz#0d1b1dfe0398ff6d32e3f8d911fa9b3108ff1883"
+  integrity sha512-JAhZibNu6BNCVJeUKRvjvMXnSt/c2+kyB0ieWrl3+5gy1C8GZM6fqH6AX+lU3ab2Ca5SdyUsM4UHc5PG7UNn9g==
+  dependencies:
+    bn.js "^4.11.8"
+    buffer "^5.2.1"
+
 deep-equal@~1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/deep-equal/-/deep-equal-1.1.1.tgz#b5c98c942ceffaf7cb051e24e1434a25a2e6076a"
