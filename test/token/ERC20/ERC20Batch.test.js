@@ -12,7 +12,7 @@ const {
 
 const ERC20Mock = artifacts.require('ERC20Decrypto');
 
-contract.only('ERC20', function (accounts) {
+contract('ERC20', function (accounts) {
   const [initialHolder, recipient, anotherAccount, fourAccount, fiveAccount] = accounts;
 
   const name = 'DecryptoToken';
