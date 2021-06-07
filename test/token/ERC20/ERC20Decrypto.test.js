@@ -1,6 +1,10 @@
 const { BN, expectEvent, expectRevert, constants } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 const ERC20BurnableMock = artifacts.require('ERC20Decrypto');
+const { MAX_UINT256 } = constants;
+const { ethers } = require('ethers');
+const { keccak256, defaultAbiCoder, toUtf8Bytes, solidityPack, MaxUint256, hexlify } = ethers.utils;
+const { ecsign } = require('ethereumjs-util');
 const {
     shouldBehaveLikeERC20,
 } = require('./ERC20.behavior');
@@ -8,6 +12,9 @@ const {
     shouldBehaveLikeERC20Burnable,
 } = require('./behaviors/ERC20Burnable.behavior');
 
+const PERMIT_TYPEHASH = keccak256(
+    toUtf8Bytes('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)')
+)
 contract('ERC20Decrypto', function (accounts) {
     const [owner, anotherAccount, thirdAccount, ...otherAccounts] = accounts;
 
@@ -18,6 +25,42 @@ contract('ERC20Decrypto', function (accounts) {
     const { ZERO_ADDRESS } = constants;
     const fee = new BN(200);//200 =>2%
     const zeroBN = new BN(0);
+
+    function getDomainSeparator(name, tokenAddress) {
+        return keccak256(
+            defaultAbiCoder.encode(
+                ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
+                [
+                    keccak256(toUtf8Bytes('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')),
+                    keccak256(toUtf8Bytes(name)),
+                    keccak256(toUtf8Bytes('1')),
+                    1,
+                    tokenAddress
+                ]
+            )
+        )
+    }
+    async function getApprovalDigest(token, approve, nonce, deadline) {
+        const name = await token.name();
+        const DOMAIN_SEPARATOR = getDomainSeparator(name, token.address);
+        return keccak256(
+            solidityPack(
+                ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+                [
+                    '0x19',
+                    '0x01',
+                    DOMAIN_SEPARATOR,
+                    keccak256(
+                        defaultAbiCoder.encode(
+                            ['bytes32', 'address', 'address', 'uint256', 'uint256', 'uint256'],
+                            [PERMIT_TYPEHASH, approve.owner, approve.spender, approve.value, nonce, deadline]
+                        )
+                    )
+                ]
+            )
+        );
+    }
+
 
     beforeEach(async function () {
         this.token = await ERC20BurnableMock.new();
@@ -315,4 +358,52 @@ contract('ERC20Decrypto', function (accounts) {
         });
     });
 
+    describe('permit', function () {
+        beforeEach(async function () {
+            expect(await this.token.DOMAIN_SEPARATOR()).to.eq(
+                keccak256(
+                    defaultAbiCoder.encode(
+                        ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
+                        [
+                            keccak256(
+                                toUtf8Bytes('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')
+                            ),
+                            keccak256(toUtf8Bytes(name)),
+                            keccak256(toUtf8Bytes('1')),
+                            1,
+                            this.token.address
+                        ]
+                    )
+                )
+            );
+            expect(await this.token.PERMIT_TYPEHASH()).to.eq(
+                keccak256(toUtf8Bytes('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'))
+            );
+            this.accountWallet = await web3.eth.accounts.privateKeyToAccount(web3.utils.randomHex(32));
+            await this.token.mint(this.accountWallet.address, initialBalance);
+        });
+        it('permit', async function () {
+            const nonce = await this.token.nonces(this.accountWallet.address);
+            const deadline = MAX_UINT256;
+
+            const digest = await getApprovalDigest(
+                this.token,
+                { owner: this.accountWallet.address, spender: anotherAccount, value: initialBalance.toString() },
+                nonce.toString(),
+                deadline.toString()
+            );
+
+            const { v, r, s } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
+
+            const { logs } = await this.token.permit(this.accountWallet.address, anotherAccount, initialBalance, deadline, v, hexlify(r), hexlify(s));
+
+            expectEvent.inLogs(logs, 'Approval', {
+                owner: this.accountWallet.address,
+                spender: anotherAccount,
+                value: initialBalance
+            });
+            expect(await this.token.allowance(this.accountWallet.address, anotherAccount)).to.be.bignumber.equal(initialBalance);
+            expect(await this.token.nonces(this.accountWallet.address)).to.be.bignumber.equal(new BN(1));
+        });
+    });
 });
