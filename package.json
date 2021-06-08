@@ -29,13 +29,13 @@
     "@truffle/hdwallet-provider": "^1.2.6",
     "deep-equal-extended": "^0.0.2",
     "eth-gas-reporter": "^0.2.22",
+    "ethereumjs-util": "^7.0.10",
+    "ethers": "^5.3.0",
     "ganache-cli": "^6.12.2",
     "solidity-coverage": "^0.7.16",
     "solium": "^1.2.5",
     "table": "^6.6.0",
     "truffle": "^5.3.2"
   },
-  "devDependencies": {
-    "ethereum-waffle": "^3.3.0"
-  }
+  "devDependencies": {}
 }
