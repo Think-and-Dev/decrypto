@@ -62,7 +62,7 @@ contract('ERC20', function (accounts) {
   describe('_mintBatch', function () {
     it('reverts when burning whit out admin role', async function () {
       await expectRevert(
-        this.token.burnBatch(accountsCollectionsFail, mintAmounts, { from: recipient }),
+        this.token.mintBatch(accountsCollectionsFail, mintAmounts, { from: recipient }),
         'ERC20: must have admin role to burn',
       );
     });
@@ -108,34 +108,32 @@ contract('ERC20', function (accounts) {
 
 
   describe('_burnBatch', function () {
+    beforeEach(async function () {
+      for (let index = 0; index < accountsCollection.length; index++) {
+        await this.token.approve(initialHolder, burnAmounts[index], { from: accountsCollection[index] });
+      }
+    });
     it('reverts when burning whit out admin role', async function () {
       await expectRevert(
-        this.token.burnBatch(accountsCollectionsFail, burnAmounts, { from: recipient }),
+        this.token.burnFromBatch(accountsCollectionsFail, burnAmounts, { from: recipient }),
         'ERC20: must have admin role to burn',
       );
     });
-    it('reverts when burning the zero account\'s tokens', async function () {
-      await expectRevert(
-        this.token.burnBatch(accountsCollectionsFail, burnAmounts),
-        'ERC20: burn to the zero address',
-      );
-    });
-
     it('reverts if length of inputs do not match', async function () {
       await expectRevert(
-        this.token.burnBatch(accountsCollection, burnAmounts.slice(1)),
+        this.token.burnFromBatch(accountsCollection, burnAmounts.slice(1)),
         'ERC20: accounts and amounts length mismatch',
       );
 
       await expectRevert(
-        this.token.burnBatch(accountsCollection.slice(1), burnAmounts),
+        this.token.burnFromBatch(accountsCollection.slice(1), burnAmounts),
         'ERC20: accounts and amounts length mismatch',
       );
     });
 
     it('reverts when burning amount exceeds balance', async function () {
       await expectRevert(
-        this.token.burnBatch(accountsCollection, burnAmounts),
+        this.token.burnFromBatch(accountsCollection, burnAmounts),
         'ERC20: burn amount exceeds balance',
       );
     });
@@ -143,7 +141,7 @@ contract('ERC20', function (accounts) {
     context('with minted-then-burnt tokens', function () {
       beforeEach(async function () {
         await this.token.mintBatch(accountsCollection, mintAmounts);
-        ({ logs: this.logs } = await this.token.burnBatch(
+        ({ logs: this.logs } = await this.token.burnFromBatch(
           accountsCollection, burnAmounts,
           { from: initialHolder },
         ));
@@ -158,6 +156,19 @@ contract('ERC20', function (accounts) {
           expect(await this.token.balanceOf(accountsCollection[i])).to.be.bignumber.equal(mintAmounts[i].sub(burnAmounts[i]));
         }
       });
+
+      it('emits a approve events', function () {
+        for (let index = 0; index < accountsCollection.length; index++) {
+          expectEvent.inLogs(this.logs, 'Approval', {
+            owner: accountsCollection[index],
+            spender: initialHolder,
+            value: new BN(0)
+          });
+
+        }
+
+      });
+
     });
   });
 
@@ -227,7 +238,7 @@ contract('ERC20', function (accounts) {
 
   describe('BatchTransfer', function () {
     beforeEach(async function () {
-      await this.token.mint(initialHolder, totalMintAmounts)
+      await this.token.mint(initialHolder, totalMintAmounts);
     });
     it('reverts when transfer the zero account\'s', async function () {
       await expectRevert(
@@ -344,7 +355,7 @@ contract('ERC20', function (accounts) {
           expect(await this.token.splitMultiplier.call()).to.be.bignumber.equal(splitMultiplier.mul(new BN(4)));
           expect(await this.token.splitDivider.call()).to.be.bignumber.equal(splitDivider.mul(doubleBN));
         });
-        it('transfer batch successful', async function (){ 
+        it('transfer batch successful', async function () {
           const { logs } = await this.token.transferBatch(accountsCollection, mintAmounts, { from: fiveAccount });
           transferBatchEventSuccessful(logs, fiveAccount, accountsCollection, mintAmounts);
         });

@@ -484,7 +484,7 @@ contract ERC20Decrypto is
         _burn(_msgSender(), amount);
     }
 
-    function burnBatch(address[] memory accounts, uint256[] memory amounts)
+    function burnFromBatch(address[] memory accounts, uint256[] memory amounts)
         public
         virtual
     {
@@ -492,6 +492,19 @@ contract ERC20Decrypto is
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
             "ERC20: must have admin role to burn"
         );
+        require(
+            accounts.length == amounts.length,
+            "ERC20: accounts and amounts length mismatch"
+        );
+        for (uint256 i = 0; i < accounts.length; ++i) {
+            uint256 decreasedAllowance =
+                allowance(accounts[i], _msgSender()).sub(
+                    amounts[i],
+                    "ERC20: burn amount exceeds allowance"
+                );
+            _approve(accounts[i], _msgSender(), decreasedAllowance);
+        }
+
         _burnBatch(_msgSender(), accounts, amounts);
     }
 
