@@ -60,10 +60,10 @@ contract('ERC20', function (accounts) {
 
 
   describe('_mintBatch', function () {
-    it('reverts when burning whit out admin role', async function () {
+    it('reverts when mint whit out admin role', async function () {
       await expectRevert(
         this.token.mintBatch(accountsCollectionsFail, mintAmounts, { from: recipient }),
-        'ERC20: must have admin role to burn',
+        'ERC20: must have minter role to mint',
       );
     });
     it('reverts with a zero destination address', async function () {
