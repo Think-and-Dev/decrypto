@@ -77,7 +77,7 @@ contract ERC20Decrypto is
     bytes32 public DOMAIN_SEPARATOR;
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
-    mapping(address => uint) public nonces;
+    mapping(address => uint256) public nonces;
 
     /**
      * @dev initialize contract -- proxy
@@ -455,10 +455,10 @@ contract ERC20Decrypto is
     }
 
     /**
-     * @dev See {IERC20-transferFrom}.
-     *
-     * Emits an {Approval} event indicating the updated allowance. This is not
-     * required by the EIP. See the note at the beginning of {ERC20}.
+     * @dev Moves `amounts` tokens from `sender` to `recipients` using the
+     * allowance mechanism. `amounts` are then deducted from the caller's
+     * allowance.
+     * Emits an {Approval} event indicating the updated allowance.
      *
      * Requirements:
      *
@@ -503,7 +503,15 @@ contract ERC20Decrypto is
         _burn(_msgSender(), amount);
     }
 
-
+    /**
+     * @dev Destroys `amounts` tokens from `accounts`, deducting from the caller's
+     * allowance.
+     *
+     * Requirements:
+     *
+     * - the caller must have allowance for ``accounts``'s tokens of at least
+     * `amount`.
+     */
     function burnFromBatch(address[] memory accounts, uint256[] memory amounts)
         public
         virtual
@@ -526,8 +534,15 @@ contract ERC20Decrypto is
         }
 
         _burnBatch(_msgSender(), accounts, amounts);
-}
+    }
 
+    /**
+     * @dev Allows for approvals to be made via secp256k1 signatures
+     *
+     * Requirements:
+     *
+     * - the spender must have signatures for owner and valid deadline.
+     */
     function permit(
         address owner,
         address spender,
@@ -561,7 +576,6 @@ contract ERC20Decrypto is
             "ERC20: invalid signature"
         );
         _approve(owner, spender, value);
-
     }
 
     /**
