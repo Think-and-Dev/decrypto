@@ -30,12 +30,13 @@ contract('ERC20', function (accounts) {
   const fee = new BN(200);//200 =>2%
 
   function transferBatchEventSuccessful(logs, from, accounts, values) {
-    expectEvent.inLogs(logs, 'TransferBatch', {
-      from: from,
-      to: accounts,
-      // values: mintAmounts,
-    });
-    expect(deepEqual(logs.filter(e => e.event === 'TransferBatch')[0].args.values, values) == true);
+    for (let index = 0; index < accounts.length; index++) {
+      expectEvent.inLogs(logs, 'Transfer', {
+        from: from,
+        to: accounts[index],
+        value: values[index],
+      });
+    }
   }
 
   function batchTransferWasSuccessful({ operator, from, accounts, values }) {

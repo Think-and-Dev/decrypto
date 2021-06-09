@@ -72,8 +72,6 @@ contract ERC20Decrypto is
         uint256 newSplitDivider
     );
 
-    event TransferBatch(address from, address[] to, uint256[] values);
-
     bytes32 public DOMAIN_SEPARATOR;
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
@@ -191,16 +189,9 @@ contract ERC20Decrypto is
         );
 
         for (uint256 i = 0; i < accounts.length; ++i) {
-            address account = accounts[i];
-            require(account != address(0), "ERC20: mint to the zero address");
-            _beforeTokenTransfer(address(0), account, amounts[i]);
             uint256 unformattedValue = _unformattedValue(amounts[i]);
-
-            _totalSupply = _totalSupply.add(unformattedValue);
-
-            _balances[account] = _balances[account].add(unformattedValue);
+            _mint(accounts[i], unformattedValue);
         }
-        emit TransferBatch(address(0), accounts, amounts);
     }
 
     /**
@@ -443,7 +434,6 @@ contract ERC20Decrypto is
      *
      * Returns a boolean value indicating whether the operation succeeded.
      *
-     * Emits a {TransferBatch} event.
      */
     function transferBatch(
         address[] memory recipients,
@@ -531,9 +521,8 @@ contract ERC20Decrypto is
                     "ERC20: burn amount exceeds allowance"
                 );
             _approve(accounts[i], _msgSender(), decreasedAllowance);
+            _burn(accounts[i], amounts[i]);
         }
-
-        _burnBatch(_msgSender(), accounts, amounts);
     }
 
     /**
@@ -734,42 +723,6 @@ contract ERC20Decrypto is
         emit Transfer(account, address(0), amount);
     }
 
-    /**
-     * @dev Destroys `amounts` tokens from `accounts`, reducing the
-     * total supply.
-     *
-     * Emits a {Transfer} event with `to` set to the zero address.
-     *
-     * Requirements:
-     *
-     * - `accounts` cannot be the zero address.
-     * - `accounts` must have at least `amount` tokens.
-     */
-    function _burnBatch(
-        address sender,
-        address[] memory accounts,
-        uint256[] memory amounts
-    ) internal virtual {
-        require(
-            accounts.length == amounts.length,
-            "ERC20: accounts and amounts length mismatch"
-        );
-        for (uint256 i = 0; i < accounts.length; ++i) {
-            address account = accounts[i];
-            require(account != address(0), "ERC20: burn to the zero address");
-            _beforeTokenTransfer(account, address(0), amounts[i]);
-            uint256 unformattedAmount = _unformattedValue(amounts[i]);
-            _balances[account] = _balances[account].sub(
-                unformattedAmount,
-                "ERC20: burn amount exceeds balance"
-            );
-            _totalSupply = _totalSupply.sub(unformattedAmount);
-        }
-
-        address[] memory zeroAddress;
-        emit TransferBatch(sender, zeroAddress, amounts);
-    }
-
     function _transferBatch(
         address sender,
         address[] memory recipients,
@@ -805,7 +758,8 @@ contract ERC20Decrypto is
                 _balances[addressFee] = _balances[addressFee].add(fee);
                 emit Transfer(sender, addressFee, fee);
             }
+            emit Transfer(sender, recipients[i], amounts[i]);
+
         }
-        emit TransferBatch(sender, recipients, amounts);
     }
 }
