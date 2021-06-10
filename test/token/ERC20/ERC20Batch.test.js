@@ -1,14 +1,6 @@
 const { BN, constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 const { ZERO_ADDRESS } = constants;
-const { deepEqual } = require('deep-equal-extended');
-
-
-const {
-  shouldBehaveLikeERC20,
-  shouldBehaveLikeERC20Transfer,
-  shouldBehaveLikeERC20Approve,
-} = require('./ERC20.behavior');
 
 const ERC20Mock = artifacts.require('ERC20Decrypto');
 

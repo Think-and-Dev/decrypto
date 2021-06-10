@@ -463,12 +463,7 @@ contract ERC20Decrypto is
         address[] memory recipients,
         uint256[] memory amounts
     ) public virtual returns (bool) {
-        _transferBatch(sender, recipients, amounts);
-        uint256 amountsTotal;
-        //get the totals of amounts
-        for (uint256 i = 0; i < amounts.length; ++i) {
-            amountsTotal = amountsTotal + amounts[i];
-        }
+        uint256 amountsTotal = _transferBatch(sender, recipients, amounts);
         uint256 formattedAmount =
             _formattedValue(
                 _allowances[sender][_msgSender()].sub(
@@ -727,12 +722,13 @@ contract ERC20Decrypto is
         address sender,
         address[] memory recipients,
         uint256[] memory amounts
-    ) internal virtual {
+    ) internal virtual returns (uint256) {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(
             recipients.length == amounts.length,
             "ERC20: accounts and amounts length mismatch"
         );
+        uint256 totalAmount;
         for (uint256 i = 0; i < recipients.length; ++i) {
             address recipient = recipients[i];
             require(
@@ -759,7 +755,8 @@ contract ERC20Decrypto is
                 emit Transfer(sender, addressFee, fee);
             }
             emit Transfer(sender, recipients[i], amounts[i]);
-
+            totalAmount = totalAmount + amounts[i];
         }
+        return totalAmount;
     }
 }
