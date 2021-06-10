@@ -1,14 +1,14 @@
 const fs = require('fs')
 
 function isLocalNetwork(network) {
-    return !['mainnet', 'testnet'].includes(network.toLowerCase());
+    return network.toLowerCase().indexOf('testnet') == -1 && network.toLowerCase().indexOf('mainnet') == -1;
 }
 
 function getDeployed(network) {
     try {
         const deployedString = fs.readFileSync(`${__dirname}/${network}.json`, 'utf8');
         return JSON.parse(deployedString);
-    } catch(err) {
+    } catch (err) {
         return { network };
     }
 }
