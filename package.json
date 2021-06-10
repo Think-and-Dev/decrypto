@@ -37,5 +37,7 @@
     "table": "^6.6.0",
     "truffle": "^5.3.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "ethereum-waffle": "^3.3.0"
+  }
 }
