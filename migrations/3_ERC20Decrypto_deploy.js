@@ -1,13 +1,18 @@
 const ERC20Decrypto = artifacts.require("ERC20Decrypto");
 const TransparentUpgradeableProxy = artifacts.require("TransparentUpgradeableProxy");
+const ProxyAdmin = artifacts.require("ProxyAdmin");
 const deployHelper = require("../deployed/deployHelper");
 
 module.exports = async function (deployer, network, accounts) {
    const deployedJson = deployHelper.getDeployed(network);
    const isLocalDeploy = deployHelper.isLocalNetwork(network);
-   const owner = isLocalDeploy ? accounts[0] : deployedJson.Owner;
+   if (!isLocalDeploy && !deployedJson.owner) {
+      throw new Error("Es necesario definir un owner en el json del deploy");
+   }
+   const owner = isLocalDeploy ? accounts[0] : deployedJson.owner
    const proxyAdminAddr = deployedJson.ProxyAdmin;
 
+   //complete the array to tokens to deploy
    const tokensToDeploy = [{ Symbol: "DTKN", TokenName: "Decrypto token" }, { Symbol: "STKN", TokenName: "S token" }];
 
    await deployer.deploy(ERC20Decrypto);
@@ -30,7 +35,7 @@ module.exports = async function (deployer, network, accounts) {
          const proxy = await TransparentUpgradeableProxy.deployed();
          deployedJson[tokenSymbol].Proxy = proxy.address.toLowerCase();
       } else {
-         const proxy = await Proxy.at(deployedJson[tokenSymbol].Proxy);
+         const proxy = await TransparentUpgradeableProxy.at(deployedJson[tokenSymbol].Proxy);
          const proxyAdmin = await ProxyAdmin.at(proxyAdminAddr);
          proxyAdmin.upgrade(proxy.address, erc20Decrypto.address);
       }

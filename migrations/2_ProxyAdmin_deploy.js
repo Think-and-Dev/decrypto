@@ -1,10 +1,10 @@
 const ProxyAdmin = artifacts.require("ProxyAdmin");
 const deployHelper = require("../deployed/deployHelper");
 
-module.exports = async function(deployer, network, accounts) {
+module.exports = async function (deployer, network, accounts) {
     const deployedJson = deployHelper.getDeployed(network);
     const isLocalDeploy = deployHelper.isLocalNetwork(network)
-    const owner = isLocalDeploy ? accounts[0] : deployedJson.Owner;
+    const owner = isLocalDeploy ? accounts[0] : deployedJson.owner;
 
     if (isLocalDeploy || !deployedJson.ProxyAdmin) {
         await deployer.deploy(ProxyAdmin);
