@@ -27,6 +27,7 @@
     "@openzeppelin/test-helpers": "^0.5.10",
     "@thinkanddev/solidoc": "^3.0.0",
     "@truffle/hdwallet-provider": "^1.2.6",
+    "deep-equal-extended": "^0.0.2",
     "eth-gas-reporter": "^0.2.22",
     "ethereumjs-util": "^7.0.10",
     "ethers": "^5.3.0",
