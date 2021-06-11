@@ -51,6 +51,21 @@ uint256 public splitDivider;
 ```
 ---
 
+```js
+bytes32 public DOMAIN_SEPARATOR;
+```
+---
+
+```js
+bytes32 public constant PERMIT_TYPEHASH;
+```
+---
+
+```js
+mapping(address => uint256) public nonces;
+```
+---
+
 ## FeesChange
 
 Emitted when `newFeeds` are sets
@@ -92,6 +107,7 @@ Emitted when apply split
 - [__ERC20Decrypto_init(string name, string symbol, address owner)](#__erc20decrypto_init)
 - [__ERC20Decrypto_init_unchained(address owner)](#__erc20decrypto_init_unchained)
 - [mint(address to, uint256 amount)](#mint)
+- [mintBatch(address[] accounts, uint256[] amounts)](#mintbatch)
 - [pause()](#pause)
 - [unpause()](#unpause)
 - [setFee(uint256 newBasisPoints)](#setfee)
@@ -104,6 +120,11 @@ Emitted when apply split
 - [decreaseAllowance(address spender, uint256 subtractedValue)](#decreaseallowance)
 - [totalSupply()](#totalsupply)
 - [transferFrom(address sender, address recipient, uint256 amount)](#transferfrom)
+- [transferBatch(address[] recipients, uint256[] amounts)](#transferbatch)
+- [transferFromBatch(address sender, address[] recipients, uint256[] amounts)](#transferfrombatch)
+- [burn(uint256 amount)](#burn)
+- [burnFromBatch(address[] accounts, uint256[] amounts)](#burnfrombatch)
+- [permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s)](#permit)
 - [_unformattedValue(uint256 value)](#_unformattedvalue)
 - [_formattedValue(uint256 value)](#_formattedvalue)
 - [_setSplit(uint256 newSplitMultiplier, uint256 newSplitDivider)](#_setsplit)
@@ -111,6 +132,7 @@ Emitted when apply split
 - [_beforeTokenTransfer(address from, address to, uint256 amount)](#_beforetokentransfer)
 - [_approve(address owner, address spender, uint256 amount)](#_approve)
 - [_burn(address account, uint256 amount)](#_burn)
+- [_transferBatch(address sender, address[] recipients, uint256[] amounts)](#_transferbatch)
 
 ### initialize
 
@@ -176,6 +198,24 @@ function mint(address to, uint256 amount) public nonpayable
 | ------------- |------------- | -----|
 | to | address |  | 
 | amount | uint256 |  | 
+
+### mintBatch
+
+Creates `amounts` new tokens for `accounts`.
+ Requirements:
+ - the caller must have the `MINTER_ROLE`.
+ - the accounts addresses must not be zero.
+
+```js
+function mintBatch(address[] accounts, uint256[] amounts) public nonpayable
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| accounts | address[] |  | 
+| amounts | uint256[] |  | 
 
 ### pause
 
@@ -389,6 +429,106 @@ returns(bool)
 | recipient | address |  | 
 | amount | uint256 |  | 
 
+### transferBatch
+
+Moves `amount` tokens from `sender` to `recipients` using the
+ allowance mechanism. `amounts` are then deducted from the caller's
+ allowance.
+ Returns a boolean value indicating whether the operation succeeded.
+
+```js
+function transferBatch(address[] recipients, uint256[] amounts) public nonpayable
+returns(bool)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| recipients | address[] |  | 
+| amounts | uint256[] |  | 
+
+### transferFromBatch
+
+Moves `amounts` tokens from `sender` to `recipients` using the
+ allowance mechanism. `amounts` are then deducted from the caller's
+ allowance.
+ Emits an {Approval} event indicating the updated allowance.
+ Requirements:
+ - `sender` and `recipient` cannot be the zero address.
+ - `sender` must have a balance of at least `amount`.
+ - the caller must have allowance for ``sender``'s tokens of at least
+ `amount`.
+
+```js
+function transferFromBatch(address sender, address[] recipients, uint256[] amounts) public nonpayable
+returns(bool)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| sender | address |  | 
+| recipients | address[] |  | 
+| amounts | uint256[] |  | 
+
+### burn
+
+Destroys `amount` tokens from the caller.
+ See {ERC20-_burn}.
+
+```js
+function burn(uint256 amount) public nonpayable
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| amount | uint256 |  | 
+
+### burnFromBatch
+
+Destroys `amounts` tokens from `accounts`, deducting from the caller's
+ allowance.
+ Requirements:
+ - the caller must have allowance for ``accounts``'s tokens of at least
+ `amount`.
+
+```js
+function burnFromBatch(address[] accounts, uint256[] amounts) public nonpayable
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| accounts | address[] |  | 
+| amounts | uint256[] |  | 
+
+### permit
+
+Allows for approvals to be made via secp256k1 signatures
+ Requirements:
+ - the spender must have signatures for owner and valid deadline.
+
+```js
+function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external nonpayable
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| owner | address |  | 
+| spender | address |  | 
+| value | uint256 |  | 
+| deadline | uint256 |  | 
+| v | uint8 |  | 
+| r | bytes32 |  | 
+| s | bytes32 |  | 
+
 ### _unformattedValue
 
 Get the underlying value of the split
@@ -517,4 +657,19 @@ function _burn(address account, uint256 amount) internal nonpayable
 | ------------- |------------- | -----|
 | account | address |  | 
 | amount | uint256 |  | 
+
+### _transferBatch
+
+```js
+function _transferBatch(address sender, address[] recipients, uint256[] amounts) internal nonpayable
+returns(uint256)
+```
+
+**Arguments**
+
+| Name        | Type           | Description  |
+| ------------- |------------- | -----|
+| sender | address |  | 
+| recipients | address[] |  | 
+| amounts | uint256[] |  | 
 

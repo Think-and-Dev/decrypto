@@ -187,12 +187,27 @@ The owner can use the mint method to create an amount of tokens to an account.
     const amount= '1000000000000000000' //amount in wei
     await contract.methods.mint(to, amount).send()
 ```
+### mintBatch
+The owner can use the mintBatch method to create amounts of tokens to accounts.
+```js
+    const accounts = ['0x9C95B0EF2D3E1D9ca479524Ba738C87BE28C1585',] // addresses that will recieve the tokens
+    const amounts = ['1000000000000000000','1000000000000000000'] //amounts in wei
+    await contract.methods.mintBatch(accounts, amounts).send()
+```
 
 ### burn
 The owner can use the burn method to remove an amount of tokens from his own account.
 ```js
     const amount = '1000000000000000000' //amount in wei
     await contract.methods.burn(amount).send()
+```
+
+### burnFromBatch
+The owner can use the burnFromBatch method to remove amounts of tokens from the accounts, this deducting from the caller's allowance.
+```js
+    const amounts = '1000000000000000000' //amount in wei
+    const accounts = ['0x9C95B0EF2D3E1D9ca479524Ba738C87BE28C1585',] // addresses that will brun the tokens
+    await contract.methods.burnFromBatch(accounts, amounts).send()
 ```
 
 ### pause
