@@ -28,33 +28,53 @@ It will build the contracts, run the linter, and run the unit tests using the ga
 
 2. Then modify `./migrations/3_ERC20Decrypto_deploy.js` change
     ```js
-        const tokenSymbol = "DTKN";
-    ```
-    For the token name you want and
-    ```js
-        deployedJson[tokenSymbol].TokenName = "Decrypto token";
-    ```
-    For the ERC20 name to deploy
+        const tokensToDeploy = [{ Symbol: "DTKN", TokenName: "Decrypto token" }, { Symbol: "STKN", TokenName: "S token" }];
 
-3. Run
+    ```
+    For the token name and symbol you want add
+    ```js
+       [{ Symbol: "DTKN", TokenName: "Decrypto token" }];
+    ```
+    For the ERC20 name and symbol to deploy
+3. Create a network deploy file
+    You will nedd to create a json file, inside `deployed` folder, with the **owner** address of the contracts (this address belongs to mnemonic key of .sceret file). 
+    
+     The name of the file **must be the name of the network** (in this case tsktestnet.json)
+
+     ```json
+        {
+            "owner": "0x8640273c0bb06fbaf5c16da62a61d96775ccb1de",
+        }
+    ```
+    In this file, the deployment process will write the addresses
+
+4. Run
 
         yarn migrate --network rsktestnet
 
-    This will deploy the contracts to the selected network (in this case rsktestnet). Besides the information provided in the console, this process creates a file with the netwrok name (in this case rsktetnet.json) inside `deployed` folder. This file will look like this:
+    This will deploy the contracts to the selected network (in this case rsktestnet). Besides the information provided in the console, this process write a file with the netwrok name (in this case rsktetnet.json) inside `deployed` folder. This file will look like this:
     ```json
         {
+            "owner": "0x8640273c0bb06fbaf5c16da62a61d96775ccb1de",
             "network": "rsktestnet",
-            "ProxyAdmin": "0x2398273c0bb06fbaf5c16da62a61d96775ccb34e",
+            "ProxyAdmin": "0x133fd98051076ac45ea10d439d48e250f4d836ea",
             "DTKN": {
                 "Symbol": "DTKN",
                 "TokenName": "Decrypto token",
                 "Decimals": 18,
-                "Logic": "0xfef844d19347a7848ce9b9475266c4b78d3b1baf",
-                "Proxy": "0x33b58b84004c8da543c1fa73d05c5eeb441de549"
-            }
+                "Proxy": "0x0f63d4a28a6a1d67f99ee2e97b75b575a671a737",
+                "Logic": "0x38ff643c6ee06258f806572bb80ae50c4d7b57a6"
+            },
+            "STKN": {
+                "Symbol": "STKN",
+                "TokenName": "S token",
+                "Decimals": 18,
+                "Proxy": "0x10ddbff8cdf356b9013e98e6c14a4b14f6df2532",
+                "Logic": "0x38ff643c6ee06258f806572bb80ae50c4d7b57a6"
+            } 
         }
     ```
-    Where ProxyAdmin is the contract owner of the proxy following the (transparent proxy pattern)[https://blog.openzeppelin.com/the-transparent-proxy-pattern/]
+    Where ProxyAdmin is the contract owner of the proxy following the [transparent proxy pattern](https://blog.openzeppelin.com/the-transparent-proxy-pattern/)
     ```json
         "ProxyAdmin": "0x2398273c0bb06fbaf5c16da62a61d96775ccb34e",
     ```
@@ -62,29 +82,38 @@ It will build the contracts, run the linter, and run the unit tests using the ga
     ```json
         "Logic": "0xfef844d19347a7848ce9b9475266c4b78d3b1baf",
     ```
-    And the Proxy is
+    And the Proxy follow the [proxy pattern] (https://docs.openzeppelin.com/upgrades-plugins/1.x/proxies) who permit upgrade the logic, so the access logic never change
+    
     ```json
         "Proxy": "0x33b58b84004c8da543c1fa73d05c5eeb441de549"
     ```
 
-If you change the tiker and run again the deploy, the file will look like this:
+If you change the ticker and run again the deploy, the file will look like this:
 ```json
     {
+        "owner": "0x8640273c0bb06fbaf5c16da62a61d96775ccb1de",
         "network": "rsktestnet",
-        "ProxyAdmin": "0x2398273c0bb06fbaf5c16da62a61d96775ccb34e",
+        "ProxyAdmin": "0x133fd98051076ac45ea10d439d48e250f4d836ea",
         "DTKN": {
             "Symbol": "DTKN",
             "TokenName": "Decrypto token",
             "Decimals": 18,
-            "Logic": "0xfef844d19347a7848ce9b9475266c4b78d3b1baf",
-            "Proxy": "0x33b58b84004c8da543c1fa73d05c5eeb441de549"
+            "Proxy": "0x0f63d4a28a6a1d67f99ee2e97b75b575a671a737",
+            "Logic": "0x38ff643c6ee06258f806572bb80ae50c4d7b57a6"
         },
+        "STKN": {
+            "Symbol": "STKN",
+            "TokenName": "S token",
+            "Decimals": 18,
+            "Proxy": "0x10ddbff8cdf356b9013e98e6c14a4b14f6df2532",
+            "Logic": "0x38ff643c6ee06258f806572bb80ae50c4d7b57a6"
+        }, 
         "OTHER": {
             "Symbol": "OTHER",
             "TokenName": "Decrypto token",
             "Decimals": 18,
-            "Logic": "0x9C95B0EF2D3E1D9ca479524Ba738C87BE28C1585",
-            "Proxy": "0x170346689cC312D8E19959Bc68c3AD03E72C9850"
+            "Proxy": "0x8507a3ef61d2abaec8f352a0a2d1cfa7009f4ca4",
+            "Logic": "0x80edf5215693fcf620185a8e534c54a04a5cace4"
         }
     }
 ```
@@ -95,11 +124,11 @@ They will share the same Proxy Admin, but they will have their own proxy's and l
 
 Once you have already deployed a Proxy Admin and a Proxy, and you want to point the proxy to a new logic follow this steps:
 
-1. First  you need to have a `.secret` file that contains the **SAME** 12 word seed (mnemonic key) that you used to deploy the original contracts.
+1. First  you need to have a `.secret` file that contains the **SAME** 12 word seed (mnemonic key) that you used to deploy the original contracts and the same owner address on the network json file.
 
 2. Then modify `./migrations/3_ERC20Decrypto_deploy.js` change
     ```js
-        const tokenSymbol = "DTKN";
+      const tokensToDeploy = [{ Symbol: "DTKN", TokenName: "Decrypto token" }, { Symbol: "STKN", TokenName: "S token" }];
     ```
     For the  **SAME** ticker of the token you deployed, and you want to upgrade
 
@@ -107,7 +136,33 @@ Once you have already deployed a Proxy Admin and a Proxy, and you want to point 
 
         yarn migrate --network rsktestnet
 
-This will result in the Proxy pointing to the new Logic contract
+    This will result in the Proxy pointing to the new Logic contract
+
+    Following the example:
+
+    ```json
+        {
+            "owner": "0x8640273c0bb06fbaf5c16da62a61d96775ccb1de",
+            "network": "rsktestnet",
+            "ProxyAdmin": "0x133fd98051076ac45ea10d439d48e250f4d836ea",
+            "DTKN": {
+                "Symbol": "DTKN",
+                "TokenName": "Decrypto token",
+                "Decimals": 18,
+                "Proxy": "0x0f63d4a28a6a1d67f99ee2e97b75b575a671a737",
+                "Logic": "0xe1c984c296cc75ec263510c7fe4b3d59b6d57560"
+            },
+            "STKN": {
+                "Symbol": "STKN",
+                "TokenName": "S token",
+                "Decimals": 18,
+                "Proxy": "0x10ddbff8cdf356b9013e98e6c14a4b14f6df2532",
+                "Logic": "0xe1c984c296cc75ec263510c7fe4b3d59b6d57560"
+            } 
+        }
+    ```
+
+
 
 ## Owner actions
 

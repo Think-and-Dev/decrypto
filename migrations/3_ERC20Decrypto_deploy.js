@@ -12,7 +12,7 @@ module.exports = async function (deployer, network, accounts) {
    const owner = isLocalDeploy ? accounts[0] : deployedJson.owner
    const proxyAdminAddr = deployedJson.ProxyAdmin;
 
-   //complete the array to tokens to deploy
+   //complete the array tokens to deploy
    const tokensToDeploy = [{ Symbol: "DTKN", TokenName: "Decrypto token" }, { Symbol: "STKN", TokenName: "S token" }];
 
    await deployer.deploy(ERC20Decrypto);
