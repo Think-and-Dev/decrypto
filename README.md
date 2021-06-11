@@ -82,7 +82,7 @@ It will build the contracts, run the linter, and run the unit tests using the ga
     ```json
         "Logic": "0xfef844d19347a7848ce9b9475266c4b78d3b1baf",
     ```
-    And the Proxy follow the [proxy pattern] (https://docs.openzeppelin.com/upgrades-plugins/1.x/proxies) who permit upgrade the logic, so the access logic never change
+    And the Proxy follow the [proxy pattern](https://docs.openzeppelin.com/upgrades-plugins/1.x/proxies) who permit upgrade the logic, so the access logic never change
     
     ```json
         "Proxy": "0x33b58b84004c8da543c1fa73d05c5eeb441de549"
